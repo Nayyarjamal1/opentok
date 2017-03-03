@@ -1,0 +1,16 @@
+<div>
+  <button (click)="getSessionID()">Get Session ID</button>
+  <!--<button (click)="endCall()">End Call</button>-->
+  <br/>
+  <div id="videos">
+    <div id="subscriber"></div>
+    <div style="height:260px; width:400px" id="publisher"></div>
+  </div>
+  <div id="buttonholder">
+    <div id="buttons">
+      <button type="button" id="start" (click)="startArchive()"  class="btn btn-danger">Start Archive</button>
+      <button type="button" id="stop" (click)="stopArchive()" class="btn btn-danger">Stop Archive</button>
+      <button type="button" id="view" (click)="viewArchive()" class="btn btn-danger" disabled>View Archive</button>
+    </div>
+  </div>
+</div>
