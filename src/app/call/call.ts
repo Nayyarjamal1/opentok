@@ -30,9 +30,10 @@ export class CallComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.archiveID = null;
-    $('#stop').hide();   
+    $('#stop').hide();
     $('#start').hide();
     $('#view').hide();
+    this.getCall();
   }
 
   public getRequsetOptions(url: string): RequestOptions {
@@ -75,8 +76,15 @@ export class CallComponent implements OnInit, AfterViewInit {
       });
   }
 
+  getCall() {
+    // var session = OT.initSession(this.apiKey, this.sessionId);
+    //   session.addEventListener("on", function () {        
+    //     alert("Call Started");
+    //   }, false);
+  }
+
   getSessionID() {
-    var url = 'http://139.59.17.63:8000/session';
+    var url = 'https://chat.sia.co.in/session';
     this.GetRequest(url)
       .subscribe(res => {
         console.log(res, "ressss")
@@ -97,12 +105,11 @@ export class CallComponent implements OnInit, AfterViewInit {
         insertMode: 'append',
         width: '100%',
         height: '100%'
-      });      
+      });
     });
-    
+
     session.on('archiveStarted', (event) => {
-      this.archiveID = event.id;
-      console.log(event.id, "jhqwru")
+      this.archiveID = event.id;      
       console.log('Archive started ' + this.archiveID);
       $('#stop').show();
       $('#start').hide();
@@ -119,6 +126,14 @@ export class CallComponent implements OnInit, AfterViewInit {
     session.on('sessionDisconnected', (event) => {
       console.log('You were disconnected from the session.', event.reason);
     });
+    
+    session.on('sessionConnected', (event) => {
+      console.log('session connected')
+    })
+    
+    session.on('connectionCreated', (event) => {
+      console.log('session created')
+    })
 
     // Connect to the session
     session.connect(this.token, (error) => {
@@ -138,7 +153,7 @@ export class CallComponent implements OnInit, AfterViewInit {
   }
 
   startArchive() {
-    var url = 'http://139.59.17.63:8000/start/?session_id=' + this.sessionId
+    var url = 'https://chat.sia.co.in/start/?session_id=' + this.sessionId
     this.GetRequest(url)
       .subscribe(res => {
         $('#start').hide();
@@ -148,7 +163,7 @@ export class CallComponent implements OnInit, AfterViewInit {
 
   // Stop recording
   stopArchive() {
-    var url = 'http://139.59.17.63:8000/stop/?archive_id=' + this.archiveID
+    var url = 'https://chat.sia.co.in/stop/?archive_id=' + this.archiveID
     this.GetRequest(url)
       .subscribe(res => {
         $('#stop').hide();
@@ -161,11 +176,15 @@ export class CallComponent implements OnInit, AfterViewInit {
   // every 5 secs until it is "available"
   viewArchive() {
     $('#view').prop('disabled', true);
-    window.location.href = 'http://139.59.17.63:8000/view/' + this.archiveID;
+    window.location.href = 'https://chat.sia.co.in/view/' + this.archiveID;
   }
 
   endCall() {
-
+    $('#start').hide();
+    $('#stop').hide();
+    $('#view').hide();
+    var session = OT.initSession(this.apiKey, this.sessionId);
+    session.disconnect()
   }
 
   ngAfterViewInit() {
