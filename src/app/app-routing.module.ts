@@ -9,7 +9,7 @@ const initialRoute = () => {
 };
 
 const appRoutes: Routes = [
-  { path: '', redirectTo: '/call', pathMatch: 'full' },  
+  { path: '', redirectTo: '/answer', pathMatch: 'full' },  
   { path: 'call', component: CallComponent },
   { path: 'answer', component: AnswerComponent },
 ];

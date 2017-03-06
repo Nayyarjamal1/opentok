@@ -33,7 +33,7 @@ export class CallComponent implements OnInit, AfterViewInit {
     $('#stop').hide();
     $('#start').hide();
     $('#view').hide();
-    this.getCall();
+    // this.getCall();
   }
 
   public getRequsetOptions(url: string): RequestOptions {
