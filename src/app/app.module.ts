@@ -9,21 +9,31 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 
 import { AppComponent } from './app.component';
 
+import { DemoComponent }   from './demo/demo';
 import { CallComponent }   from './call/call';
 import { AnswerComponent } from './answer/answer'
+import { SumitComponent } from './sumit/sumit'
+import { NayyarComponent } from './nayyar/nayyar';
+import { DialogModule, ButtonModule } from 'primeng/primeng'
 
 @NgModule({
   declarations: [
     AppComponent,
     CallComponent,
-    AnswerComponent
+    AnswerComponent,
+    SumitComponent,
+    NayyarComponent,
+    DemoComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
     routing,    
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    
+    DialogModule,
+    ButtonModule
   ],
   providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]

@@ -19,9 +19,27 @@
       "tsconfig": "tsconfig.json",
       "prefix": "app",
       "styles": [
-        "styles.css"
+        "styles.css",
+        "assets/font-awesome/css/font-awesome.min.css",
+        "assets/css/animate.css",
+        "assets/css/layout-indigo.css",
+        "assets/css/nanoscroller.css",
+        "assets/css/component.css",
+        "assets/css/ripple.css",
+        "../node_modules/perfect-scrollbar/dist/css/perfect-scrollbar.css",
+        "../node_modules/primeui/primeui-ng-all.min.css",
+        "assets/css/primeUltima-theme.css",
+        "assets/css/theme.css"
       ],
-      "scripts": [],
+      "scripts": [
+        "../node_modules/jquery/dist/jquery.min.js",
+        "assets/js/jquery.imagemapster.min.js",
+        "assets/js/jquery-ui-1.12.1.custom/jquery-ui.min.js",
+        "assets/js/nanoscroller.js",
+        "assets/js/ripple.js",
+        "assets/js/swipe.js",
+        "../node_modules/perfect-scrollbar/dist/js/perfect-scrollbar.min.js"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",
