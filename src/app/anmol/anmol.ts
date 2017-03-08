@@ -11,11 +11,11 @@ declare var OT: any;
 
 
 @Component({
-    selector: 'app-nayyar',
-    templateUrl: './nayyar.html',
-    styleUrls: ['./nayyar.css']
+    selector: 'app-anmol',
+    templateUrl: './anmol.html',
+    styleUrls: ['./anmol.css']
 })
-export class NayyarComponent implements OnInit {
+export class AnmolComponent implements OnInit {
 
     public headers: Headers;
     public requestoptions: RequestOptions;
@@ -37,8 +37,8 @@ export class NayyarComponent implements OnInit {
 
     ngOnInit() {
         $('#endBtn').hide();
-        $('#startBtn').hide();    
-        this.getSessionDetails();   
+        $('#startBtn').hide();
+        this.getSessionDetails();
     }
 
     public getRequsetOptions(url: string): RequestOptions {
@@ -80,9 +80,9 @@ export class NayyarComponent implements OnInit {
                 }
             });
     }
-
+    
     getSessionDetails() {
-        var url = 'https://chat.sia.co.in/session/?id=2';
+        var url = 'https://chat.sia.co.in/session/?id=3';
         this.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
@@ -103,8 +103,7 @@ export class NayyarComponent implements OnInit {
             $('#startBtn').hide();
             this.noCallFound=false;
             this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")
-                // this.session.subscribe(event.stream, 'myPublisher');
+                console.log(event, "stream")                
                 for (let i = 0; i < event.streams.length; i++) {
                     if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
                         this.subscribeToStream(event.streams[i]);
@@ -112,7 +111,7 @@ export class NayyarComponent implements OnInit {
                 }
             })
         })
-        
+
         this.session.connect(this.apiKey, this.token)
     }
 
@@ -125,7 +124,6 @@ export class NayyarComponent implements OnInit {
         this.dialog = false;
         console.log(this.stream, 'helloo')
         var div = document.createElement('div');
-        div.innerHTML = 'subscriber';
         div.setAttribute('style', 'width: 264px; height: 186px; margin: 30px;');
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);

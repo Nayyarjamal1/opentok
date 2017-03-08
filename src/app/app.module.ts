@@ -14,6 +14,8 @@ import { CallComponent }   from './call/call';
 import { AnswerComponent } from './answer/answer'
 import { SumitComponent } from './sumit/sumit'
 import { NayyarComponent } from './nayyar/nayyar';
+import { AnmolComponent } from './anmol/anmol'
+
 import { DialogModule, ButtonModule } from 'primeng/primeng'
 
 @NgModule({
@@ -23,7 +25,8 @@ import { DialogModule, ButtonModule } from 'primeng/primeng'
     AnswerComponent,
     SumitComponent,
     NayyarComponent,
-    DemoComponent
+    DemoComponent,
+    AnmolComponent
   ],
   imports: [
     BrowserModule,

@@ -98,27 +98,12 @@ export class SumitComponent implements OnInit {
 
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
-            // this.session.publish('myPublisher')
+            this.session.publish('myPublisher')
             $('#endBtn').show();
             $('#startBtn').hide();
             this.noCallFound=false;
             this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")
-                this.session.subscribe(event.stream, 'myPublisher', {
-                    width: '100%',
-                    height: '100%'
-                });
-                for (let i = 0; i < event.streams.length; i++) {
-                    if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
-                        this.subscribeToStream(event.streams[i]);
-                    }
-                }
-            })
-        })
-
-        this.session.on('sessionCreated', (event) => {
-            this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")
+                console.log(event, "stream")                
                 for (let i = 0; i < event.streams.length; i++) {
                     if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
                         this.subscribeToStream(event.streams[i]);
@@ -139,6 +124,7 @@ export class SumitComponent implements OnInit {
         this.dialog = false;
         console.log(this.stream, 'helloo')
         var div = document.createElement('div');
+        div.setAttribute('style', 'width: 264px; height: 186px; margin: 30px;');
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
 

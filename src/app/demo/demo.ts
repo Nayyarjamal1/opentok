@@ -28,14 +28,14 @@ export class DemoComponent implements OnInit {
     session: any;
     dialog: boolean = false;
     stream: any;
-    doctorList: Array<any> = [];
-    noCallFound: boolean = true;
+    doctorList: Array<any> = [];    
 
     constructor(public http: Http, public router: Router) {
     }
 
 
     ngOnInit() {
+        $('#endBtn').hide();  
         this.getDoctors();
     }
 
@@ -87,8 +87,7 @@ export class DemoComponent implements OnInit {
             })
     }
 
-    getSessionDetails(id) {
-        this.noCallFound = false;
+    getSessionDetails(id) {        
         var url = 'https://chat.sia.co.in/session/?id=' + id;
         this.GetRequest(url)
             .subscribe(res => {
@@ -108,9 +107,10 @@ export class DemoComponent implements OnInit {
 
     initializeSession() {
 
-        this.session.on('connectionCreated', (event) => {
+        this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
             this.session.publish('myPublisher') 
+            $('#endBtn').show();            
             this.session.on('streamCreated', (event) => {
                 console.log(event, "stream")                
                 for (let i = 0; i < event.streams.length; i++) {
@@ -132,12 +132,15 @@ export class DemoComponent implements OnInit {
             })
         })
 
-        this.session.connect(this.apiKey, this.token)
+        this.session.connect(this.apiKey, this.token, (error) => {
+            console.log(error, "connect error")
+        })
     }
 
     subscribeToStream(stream) {
         console.log(stream, 'helloo')
         var div = document.createElement('div');
+        div.innerHTML = 'subscriber';
         div.setAttribute('id', 'stream-' + stream.streamId);
         document.body.appendChild(div);
 
@@ -145,6 +148,18 @@ export class DemoComponent implements OnInit {
     }
 
     rejectCall() {
-        this.session.disconnect();
+        this.session.disconnect(this.token, (error) => {
+            console.log(error, "disconnect error")
+        });
+        
+         $('#endBtn').hide(); 
+    }
+    
+    endCall(){
+        this.session.disconnect(this.token, (error) => {
+            console.log(error, "disconnect error")
+        });
+        
+        $('#endBtn').hide(); 
     }
 }
