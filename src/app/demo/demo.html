@@ -5,7 +5,9 @@
         </div>
         <div class="ui-g-6 text-right">
             <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton
-            label="Call Now" type="button" (click)="getSessionDetails(doc.id)"></button>
+            label="Audio Call" type="button" (click)="getSessionDetails(doc.id, 'audio')"></button>
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton
+            label="Video Call" type="button" (click)="getSessionDetails(doc.id, 'video')"></button>
         </div>
     </div>
 </div>

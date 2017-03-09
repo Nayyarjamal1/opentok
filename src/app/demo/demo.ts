@@ -87,7 +87,7 @@ export class DemoComponent implements OnInit {
             })
     }
 
-    getSessionDetails(id) {
+    getSessionDetails(id, type) {
         var url = 'https://chat.sia.co.in/session/?id=' + id;
         this.GetRequest(url)
             .subscribe(res => {
@@ -101,37 +101,31 @@ export class DemoComponent implements OnInit {
 
                 this.session = OT.initSession(this.apiKey, this.sessionId);
 
-                this.initializeSession();
+                if (type == 'audio') {
+                    this.audioCall();
+                    console.log(type, "call type audio")
+                } else {
+                    this.videoCall();
+                    console.log(type, "call type audio")
+                }
             })
     }
 
-    initializeSession() {
-
+    audioCall() {
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
-            
-            var pubOptions = { videoSource: null };            
+
+            var pubOptions = { videoSource: null };
             var publisher = OT.initPublisher('myPublisher', pubOptions);
-            
+
             this.session.publish(publisher);
-            
+
             $('#endBtn').show();
             this.session.on('streamCreated', (event) => {
                 console.log(event, "stream")
                 for (let i = 0; i < event.streams.length; i++) {
                     if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
-                        this.subscribeToStream(event.streams[i]);
-                    }
-                }
-            })
-        })
-
-        this.session.on('sessionCreated', (event) => {
-            this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")
-                for (let i = 0; i < event.streams.length; i++) {
-                    if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
-                        this.subscribeToStream(event.streams[i]);
+                        this.subscribeToAudioStream(event.streams[i]);
                     }
                 }
             })
@@ -142,15 +136,85 @@ export class DemoComponent implements OnInit {
         })
     }
 
-    subscribeToStream(stream) {
+    videoCall() {
+
+        this.session.on('sessionConnected', (event) => {
+            console.log("Hi i'm connected")
+
+            this.session.publish('myPublisher');
+
+            $('#endBtn').show();
+            this.session.on('streamCreated', (event) => {
+                console.log(event, "stream")
+                for (let i = 0; i < event.streams.length; i++) {
+                    if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+                        this.subscribeToVideoStream(event.streams[i]);
+                    }
+                }
+            })
+        })
+
+        this.session.connect(this.apiKey, this.token, (error) => {
+            console.log(error, "connect error")
+        })
+
+    }
+
+    initializeSession() {
+
+        // this.session.on('sessionConnected', (event) => {
+        //     console.log("Hi i'm connected")
+
+        //     var pubOptions = { videoSource: null };
+        //     var publisher = OT.initPublisher('myPublisher', pubOptions);
+
+        //     this.session.publish(publisher);
+
+        //     $('#endBtn').show();
+        //     this.session.on('streamCreated', (event) => {
+        //         console.log(event, "stream")
+        //         for (let i = 0; i < event.streams.length; i++) {
+        //             if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+        //                 this.subscribeToStream(event.streams[i]);
+        //             }
+        //         }
+        //     })
+        // })
+
+        // this.session.on('sessionCreated', (event) => {
+        //     this.session.on('streamCreated', (event) => {
+        //         console.log(event, "stream")
+        //         for (let i = 0; i < event.streams.length; i++) {
+        //             if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+        //                 this.subscribeToStream(event.streams[i]);
+        //             }
+        //         }
+        //     })
+        // })
+
+        // this.session.connect(this.apiKey, this.token, (error) => {
+        //     console.log(error, "connect error")
+        // })
+    }
+
+    subscribeToAudioStream(stream) {
         console.log(stream, 'helloo')
         var div = document.createElement('div');
         div.innerHTML = 'subscriber';
         div.setAttribute('id', 'stream-' + stream.streamId);
         document.body.appendChild(div);
-        
+
         var options = { subscribeToAudio: true, subscribeToVideo: false };
-        this.session.subscribe(stream, div.id, options).subscribeToVideo(false);;       
+        this.session.subscribe(stream, div.id, options).subscribeToVideo(false);
+    }
+
+    subscribeToVideoStream(stream) {
+        console.log(stream, 'helloo')
+        var div = document.createElement('div');
+        div.innerHTML = 'subscriber';
+        div.setAttribute('id', 'stream-' + stream.streamId);
+        document.body.appendChild(div);
+        this.session.subscribe(stream, div.id);
     }
 
     rejectCall() {

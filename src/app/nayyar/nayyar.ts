@@ -30,6 +30,7 @@ export class NayyarComponent implements OnInit {
     stream: any;
     doctorList: Array<any> = [];
     noCallFound: boolean = true;
+    stream_type: boolean;
 
     constructor(public http: Http, public router: Router) {
     }
@@ -96,35 +97,57 @@ export class NayyarComponent implements OnInit {
 
     initializeSession() {
 
-        this.session.on('sessionConnected', (event) => {
-            console.log("Hi i'm connected")
+        // this.session.on('sessionConnected', (event) => {
+        //     console.log("Hi i'm connected")
 
-            var pubOptions = { videoSource: null };
-            var publisher = OT.initPublisher('myPublisher', pubOptions);
+        //     var pubOptions = { videoSource: null };
+        //     var publisher = OT.initPublisher('myPublisher', pubOptions);
 
-            this.session.publish(publisher);
+        //     this.session.publish(publisher);
 
-            // this.session.publish('myPublisher')
-            $('#endBtn').show();
-            $('#startBtn').hide();
-            this.noCallFound = false;
-            this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")
-                // this.session.subscribe(event.stream, 'myPublisher');
-                for (let i = 0; i < event.streams.length; i++) {
-                    if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
-                        this.subscribeToStream(event.streams[i]);
+        //     // this.session.publish('myPublisher')
+        //     $('#endBtn').show();
+        //     $('#startBtn').hide();
+        //     this.noCallFound = false;
+        //     this.session.on('streamCreated', (event) => {
+        //         console.log(event, "stream")
+        //         // this.session.subscribe(event.stream, 'myPublisher');
+        //         for (let i = 0; i < event.streams.length; i++) {
+        //             if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+
+        //                 console.log(event.streams[i].hasVideo, "stream type")
+        //                 this.subscribeToStream(event.streams[i]);
+        //             }
+        //         }
+        //     })
+        // })
+
+        this.session.on('streamCreated', (event) => {
+            console.log(event, "stream")
+            for (let i = 0; i < event.streams.length; i++) {
+                if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+
+                    console.log(event.streams[i].hasVideo, "stream type")
+                    if (!event.streams[i].hasVideo) {
+                        var pubOptions = { videoSource: null };
+                        var publisher = OT.initPublisher('myPublisher', pubOptions);
+                        this.session.publish(publisher);
+                    } else {
+                        this.session.publish('myPublisher');
                     }
+
+                    this.subscribeToAudioStream(event.streams[i], event.streams[i].hasVideo);
                 }
-            })
+            }
         })
 
         this.session.connect(this.apiKey, this.token)
     }
 
-    subscribeToStream(stream) {
+    subscribeToAudioStream(stream, type) {
         this.dialog = true;
         this.stream = stream;
+        this.stream_type = type;
     }
 
     acceptCall() {
@@ -136,9 +159,12 @@ export class NayyarComponent implements OnInit {
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
 
-        var options = { subscribeToAudio: true, subscribeToVideo: false };
-        this.session.subscribe(this.stream, div.id, options).subscribeToVideo(false);        
-
+        if (!this.stream_type) {
+            var options = { subscribeToAudio: true, subscribeToVideo: false };
+            this.session.subscribe(this.stream, div.id, options).subscribeToVideo(false);
+        }else {
+            this.session.subscribe(this.stream, div.id);
+        }
         // this.session.subscribe(this.stream, div.id);
     }
 
