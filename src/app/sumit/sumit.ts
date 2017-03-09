@@ -103,7 +103,7 @@ export class SumitComponent implements OnInit {
             $('#startBtn').hide();
             this.noCallFound=false;
             this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")                
+                // console.log(event, "stream")                
                 for (let i = 0; i < event.streams.length; i++) {
                     if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
                         this.subscribeToStream(event.streams[i]);

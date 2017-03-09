@@ -37,8 +37,8 @@ export class NayyarComponent implements OnInit {
 
     ngOnInit() {
         $('#endBtn').hide();
-        $('#startBtn').hide();    
-        this.getSessionDetails();   
+        $('#startBtn').hide();
+        this.getSessionDetails();
     }
 
     public getRequsetOptions(url: string): RequestOptions {
@@ -98,10 +98,16 @@ export class NayyarComponent implements OnInit {
 
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
-            this.session.publish('myPublisher')
+
+            var pubOptions = { videoSource: null };
+            var publisher = OT.initPublisher('myPublisher', pubOptions);
+
+            this.session.publish(publisher);
+
+            // this.session.publish('myPublisher')
             $('#endBtn').show();
             $('#startBtn').hide();
-            this.noCallFound=false;
+            this.noCallFound = false;
             this.session.on('streamCreated', (event) => {
                 console.log(event, "stream")
                 // this.session.subscribe(event.stream, 'myPublisher');
@@ -112,7 +118,7 @@ export class NayyarComponent implements OnInit {
                 }
             })
         })
-        
+
         this.session.connect(this.apiKey, this.token)
     }
 
@@ -130,7 +136,10 @@ export class NayyarComponent implements OnInit {
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
 
-        this.session.subscribe(this.stream, div.id);
+        var options = { subscribeToAudio: true, subscribeToVideo: false };
+        this.session.subscribe(this.stream, div.id, options).subscribeToVideo(false);        
+
+        // this.session.subscribe(this.stream, div.id);
     }
 
     endCall() {

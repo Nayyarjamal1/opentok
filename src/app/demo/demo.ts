@@ -28,14 +28,14 @@ export class DemoComponent implements OnInit {
     session: any;
     dialog: boolean = false;
     stream: any;
-    doctorList: Array<any> = [];    
+    doctorList: Array<any> = [];
 
     constructor(public http: Http, public router: Router) {
     }
 
 
     ngOnInit() {
-        $('#endBtn').hide();  
+        $('#endBtn').hide();
         this.getDoctors();
     }
 
@@ -87,7 +87,7 @@ export class DemoComponent implements OnInit {
             })
     }
 
-    getSessionDetails(id) {        
+    getSessionDetails(id) {
         var url = 'https://chat.sia.co.in/session/?id=' + id;
         this.GetRequest(url)
             .subscribe(res => {
@@ -100,7 +100,7 @@ export class DemoComponent implements OnInit {
                 // this.token = "T1==cGFydG5lcl9pZD00NTc4Mzk3MiZzaWc9NjkxYWY2Y2I0ODU3OGI5ODVmOGYxZWY3YmQwNDAyYzM3YWM4NDVjOTpub25jZT0xMzA0NjcmY29ubmVjdGlvbl9kYXRhPU5vbmUmY3JlYXRlX3RpbWU9MTQ4ODg3MTg0MiZyb2xlPXB1Ymxpc2hlciZleHBpcmVfdGltZT0xNDg4OTU4MjQyJnNlc3Npb25faWQ9MV9NWDQwTlRjNE16azNNbjR4TWk0ek5DNDFOaTQzT0g0eE5EZzRPRFkzTXpFNU9EQXlmbGhyTlZWTWNHSlJibFZUSzFGQlJHdE9SR0oxVUdOUVRYNS0="
 
                 this.session = OT.initSession(this.apiKey, this.sessionId);
-                
+
                 this.initializeSession();
             })
     }
@@ -109,10 +109,15 @@ export class DemoComponent implements OnInit {
 
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
-            this.session.publish('myPublisher') 
-            $('#endBtn').show();            
+            
+            var pubOptions = { videoSource: null };            
+            var publisher = OT.initPublisher('myPublisher', pubOptions);
+            
+            this.session.publish(publisher);
+            
+            $('#endBtn').show();
             this.session.on('streamCreated', (event) => {
-                console.log(event, "stream")                
+                console.log(event, "stream")
                 for (let i = 0; i < event.streams.length; i++) {
                     if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
                         this.subscribeToStream(event.streams[i]);
@@ -143,23 +148,49 @@ export class DemoComponent implements OnInit {
         div.innerHTML = 'subscriber';
         div.setAttribute('id', 'stream-' + stream.streamId);
         document.body.appendChild(div);
-
-        this.session.subscribe(stream, div.id);
+        
+        var options = { subscribeToAudio: true, subscribeToVideo: false };
+        this.session.subscribe(stream, div.id, options).subscribeToVideo(false);;       
     }
 
     rejectCall() {
         this.session.disconnect(this.token, (error) => {
             console.log(error, "disconnect error")
         });
-        
-         $('#endBtn').hide(); 
+
+        $('#endBtn').hide();
     }
-    
-    endCall(){
+
+    endCall() {
         this.session.disconnect(this.token, (error) => {
             console.log(error, "disconnect error")
         });
-        
-        $('#endBtn').hide(); 
+
+        // this.session.off("streamCreated", eventHandler);
+
+        // this.session.signal({
+        //     type: "streamCreated",
+        //     data: "hello"
+        // },
+        //     function (error) {
+        //         if (error) {
+        //             console.log("signal error: " + error.message);
+        //         } else {
+        //             console.log("signal sent");
+        //         }
+        //     }
+        // );
+
+        // function unsubscribe(subscriberId) {
+        //     console.log("unsubscribe called");
+        //     for (var i = 0; i < subscribers.length; i++) {
+        //         var subscriber = subscribers[i];
+        //         if (subscriber.id == subscriberId) {
+        //             session.unsubscribe(subscriber);
+        //         }
+        //     }
+        // }
+
+        $('#endBtn').hide();
     }
 }
