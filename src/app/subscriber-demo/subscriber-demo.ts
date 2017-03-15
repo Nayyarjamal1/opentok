@@ -6,11 +6,11 @@ declare var OT: any;
 
 
 @Component({
-    selector: 'app-anmol',
-    templateUrl: './anmol.html',
-    styleUrls: ['./anmol.css']
+    selector: 'app-subscriber-demo',
+    templateUrl: './subscriber-demo.html',
+    styleUrls: ['./subscriber-demo.css']
 })
-export class AnmolComponent implements OnInit {
+export class SubscriberDemoComponent implements OnInit {
 
     apiKey: any;
     sessionId: any;
@@ -22,6 +22,8 @@ export class AnmolComponent implements OnInit {
     stream: any;
     doctorList: Array<any> = [];
     noCallFound: boolean = true;
+    publisher: any;
+    subscriber: any;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -29,7 +31,6 @@ export class AnmolComponent implements OnInit {
 
     ngOnInit() {
         $('#endBtn').hide();
-        $('#startBtn').hide();
         this.getSessionDetails();
     }
 
@@ -46,13 +47,21 @@ export class AnmolComponent implements OnInit {
             })
     }
 
-    initializeSession() {
-
+    initializeSession() {        
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
-            this.session.publish('myPublisher')
-            $('#endBtn').show();
-            $('#startBtn').hide();
+            if (!this.publisher) {
+                var publisherDiv = document.createElement('div');
+                publisherDiv.setAttribute('id', 'myPublisher');
+                document.body.appendChild(publisherDiv);
+                var publisherProps = {
+                    width: 264,
+                    height: 186,
+                };
+                this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
+                this.session.publish(this.publisher);
+            }
+
             this.noCallFound = false;
             this.session.on('streamCreated', (event) => {
                 console.log(event, "stream")
@@ -64,11 +73,7 @@ export class AnmolComponent implements OnInit {
             })
         })
 
-        // this.session.on('connectionCreated', (event) => {
-        //     console.log("connection created")            
-        // })
-
-        this.session.on("sessionDisconnected", function () {
+        this.session.on("sessionDestroyed", function () {
             console.log("for publisher")
         })
 
@@ -81,25 +86,42 @@ export class AnmolComponent implements OnInit {
     }
 
     acceptCall() {
+        $('#endBtn').show();
+        this.session.signal({
+            to: this.stream.connection,
+            data: "hello"
+        }, function (error) {
+            if (error) {
+                console.log("signal error ("
+                    + error.name
+                    + "): " + error.message);
+            } else {
+                console.log("signal sent.");
+            }
+        });
+
         this.dialog = false;
         console.log(this.stream, 'helloo')
         var div = document.createElement('div');
-        div.setAttribute('style', 'width: 264px; height: 186px; margin: 30px;');
+        div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
 
         this.session.subscribe(this.stream, div.id);
+        this.subscriber = this.session.subscribe(this.stream, div.id);
     }
 
-    endCall() {
-        // this.session.unpublish(this.stream)
-        this.session.disconnect();
-        $('#endBtn').hide();
-        $('#startBtn').show();
+    endCall() {        
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
     }
 
-    rejectCall() {
-        this.dialog = false;
-        this.session.disconnect();
+    rejectCall() {        
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
     }
 }

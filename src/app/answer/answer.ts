@@ -1,10 +1,5 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { Http, Response, RequestOptions, Headers, Request, RequestMethod } from '@angular/http';
-import { Route, Router } from "@angular/router";
-import 'rxjs/Rx';
-import 'rxjs/add/operator/map';
-import * as Rx from 'rxjs/Rx';
-import { Observable, Subject } from 'rxjs/Rx';
+import { GlobalService } from '../GlobalService';
 
 declare var $: any;
 declare var OT: any;
@@ -16,10 +11,7 @@ declare var OT: any;
     styleUrls: ['./answer.css']
 })
 export class AnswerComponent implements OnInit {
-
-    public headers: Headers;
-    public requestoptions: RequestOptions;
-    public res: Response;
+    
     apiKey: any;
     sessionId: any;
     token: any;
@@ -31,57 +23,17 @@ export class AnswerComponent implements OnInit {
     doctorList: Array<any> = [];
     noCallFound: boolean = true;
 
-    constructor(public http: Http, public router: Router) {
+    constructor(private base_path_service:GlobalService) {
     }
 
 
     ngOnInit() {
         this.getDoctors();
-    }
-
-    public getRequsetOptions(url: string): RequestOptions {
-
-        this.requestoptions = new RequestOptions({
-            method: RequestMethod.Get,
-            url: url,
-            headers: this.headers
-        });
-
-        return this.requestoptions;
-    }
-
-    public GetRequest(url: string): any {
-        return this.http.request(new Request(this.getRequsetOptions(url)))
-            .map((res: Response) => {
-                let jsonObj: any;
-
-                if (res.status === 204) {
-                    jsonObj = null;
-                }
-                else if (res.status === 500) {
-                    jsonObj = null;
-                }
-                else if (res.status !== 204) {
-                    jsonObj = res.json()
-                }
-                return [{ status: res.status, json: jsonObj }]
-            })
-            .catch(error => {
-                if (error.status == 401) {
-                    this.router.navigateByUrl('/home/login');
-                    localStorage.clear();
-                }
-                if (error.status === 403 || error.status === 500 || error.status === 401 || error.status === 400 || error.status === 409 || error.status === 404) {
-                    return Observable.throw(error);
-                } else {
-                    return Observable.throw(error);
-                }
-            });
-    }
+    }    
 
     getDoctors() {
-        var url = 'https://chat.sia.co.in/doc/';
-        this.GetRequest(url)
+        var url = this.base_path_service.base_path+'doc/';
+        this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.doctorList = res[0].json;
             })
@@ -89,8 +41,8 @@ export class AnswerComponent implements OnInit {
 
     getSessionDetails(id) {
         this.noCallFound = false;
-        var url = 'https://chat.sia.co.in/session/?id=' + id;
-        this.GetRequest(url)
+        var url = this.base_path_service.base_path+'session/?id=' + id;
+        this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
                 this.sessionId = res[0].json.sessionId;

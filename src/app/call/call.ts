@@ -1,10 +1,5 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { Http, Response, RequestOptions, Headers, Request, RequestMethod } from '@angular/http';
-import { Route, Router } from "@angular/router";
-import 'rxjs/Rx';
-import 'rxjs/add/operator/map';
-import * as Rx from 'rxjs/Rx';
-import { Observable, Subject } from 'rxjs/Rx';
+import { GlobalService } from '../GlobalService';
 
 declare var $: any;
 declare var OT: any;
@@ -16,16 +11,13 @@ declare var OT: any;
 })
 export class CallComponent implements OnInit, AfterViewInit {
 
-  public headers: Headers;
-  public requestoptions: RequestOptions;
-  public res: Response;
   apiKey: any;
   sessionId: any;
   token: any;
   status: any;
   archiveID: any;
 
-  constructor(public http: Http, public router: Router) {
+  constructor(private base_path_service:GlobalService) {
   }
 
   ngOnInit() {
@@ -36,46 +28,6 @@ export class CallComponent implements OnInit, AfterViewInit {
     // this.getCall();
   }
 
-  public getRequsetOptions(url: string): RequestOptions {
-
-    this.requestoptions = new RequestOptions({
-      method: RequestMethod.Get,
-      url: url,
-      headers: this.headers
-    });
-
-    return this.requestoptions;
-  }
-
-  public GetRequest(url: string): any {
-    return this.http.request(new Request(this.getRequsetOptions(url)))
-      .map((res: Response) => {
-        let jsonObj: any;
-        //this.router.navigateByUrl('/home/login');              
-        if (res.status === 204) {
-          jsonObj = null;
-        }
-        else if (res.status === 500) {
-          jsonObj = null;
-        }
-        else if (res.status !== 204) {
-          jsonObj = res.json()
-        }
-        return [{ status: res.status, json: jsonObj }]
-      })
-      .catch(error => {
-        if (error.status == 401) {
-          this.router.navigateByUrl('/home/login');
-          localStorage.clear();
-        }
-        if (error.status === 403 || error.status === 500 || error.status === 401 || error.status === 400 || error.status === 409 || error.status === 404) {
-          return Observable.throw(error);
-        } else {
-          return Observable.throw(error);
-        }
-      });
-  }
-
   getCall() {
     // var session = OT.initSession(this.apiKey, this.sessionId);
     //   session.addEventListener("on", function () {        
@@ -84,8 +36,8 @@ export class CallComponent implements OnInit, AfterViewInit {
   }
 
   getSessionID() {
-    var url = 'https://chat.sia.co.in/session';
-    this.GetRequest(url)
+    var url = this.base_path_service.base_path+'session';
+    this.base_path_service.GetRequest(url)
       .subscribe(res => {
         console.log(res, "ressss")
         this.apiKey = res[0].json.apiKey;
@@ -154,7 +106,7 @@ export class CallComponent implements OnInit, AfterViewInit {
 
   startArchive() {
     var url = 'https://chat.sia.co.in/start/?session_id=' + this.sessionId
-    this.GetRequest(url)
+    this.base_path_service.GetRequest(url)
       .subscribe(res => {
         $('#start').hide();
         $('#stop').show();
@@ -164,7 +116,7 @@ export class CallComponent implements OnInit, AfterViewInit {
   // Stop recording
   stopArchive() {
     var url = 'https://chat.sia.co.in/stop/?archive_id=' + this.archiveID
-    this.GetRequest(url)
+    this.base_path_service.GetRequest(url)
       .subscribe(res => {
         $('#stop').hide();
         $('#view').prop('disabled', false);
