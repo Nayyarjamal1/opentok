@@ -47,10 +47,6 @@ export class PublisherComponent implements OnInit {
                 this.sessionId = res[0].json.sessionId;
                 this.token = res[0].json.token;
 
-                // this.apiKey = '45783972';
-                // this.sessionId = "1_MX40NTc4Mzk3Mn4xMi4zNC41Ni43OH4xNDg4ODY3MzE5ODAyflhrNVVMcGJRblVTK1FBRGtORGJ1UGNQTX5-";
-                // this.token = "T1==cGFydG5lcl9pZD00NTc4Mzk3MiZzaWc9NjkxYWY2Y2I0ODU3OGI5ODVmOGYxZWY3YmQwNDAyYzM3YWM4NDVjOTpub25jZT0xMzA0NjcmY29ubmVjdGlvbl9kYXRhPU5vbmUmY3JlYXRlX3RpbWU9MTQ4ODg3MTg0MiZyb2xlPXB1Ymxpc2hlciZleHBpcmVfdGltZT0xNDg4OTU4MjQyJnNlc3Npb25faWQ9MV9NWDQwTlRjNE16azNNbjR4TWk0ek5DNDFOaTQzT0g0eE5EZzRPRFkzTXpFNU9EQXlmbGhyTlZWTWNHSlJibFZUSzFGQlJHdE9SR0oxVUdOUVRYNS0="
-
                 this.session = OT.initSession(this.apiKey, this.sessionId);
 
                 if (type == 'audio') {

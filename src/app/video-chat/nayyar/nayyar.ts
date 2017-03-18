@@ -25,6 +25,10 @@ export class NayyarComponent implements OnInit {
     stream_type: boolean;
     subscriber: any;
     publisher: any;
+    image: any;
+    imageName: any;
+    id: any;
+    imageFlag = 0;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -66,11 +70,16 @@ export class NayyarComponent implements OnInit {
     }
 
     initializeSession() {
-        
+
         this.session = OT.initSession(this.apiKey, this.sessionId);
-        
+
         this.session.on('sessionConnected', (event) => {
-            console.log("Hi i'm connected")
+            console.log(event, "Hi i'm connected")
+
+            this.session.on('signal:gettingCall', (event) => {
+                console.log(event.data, "data")
+            })
+            
             if (!this.publisher) {
                 var publisherDiv = document.createElement('div');
                 publisherDiv.setAttribute('id', 'myPublisher');
@@ -82,6 +91,7 @@ export class NayyarComponent implements OnInit {
                 this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
             }
+            // })
 
             this.noCallFound = false;
             this.session.on('streamCreated', (event) => {
@@ -92,7 +102,21 @@ export class NayyarComponent implements OnInit {
                     }
                 }
             })
+
         })
+
+        this.session.on('signal:receiver', (event) => {
+            console.log(event, "gsffee")
+            var msg = document.createElement('img');
+            msg.setAttribute('src', event.data);
+            // var msgHistory = document.getElementById('history')
+            // var msg = document.createElement('p');
+            // msg.innerHTML = event.data;
+            msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
+            var msgHistory = document.getElementById('history')
+            msgHistory.appendChild(msg);
+            msg.scrollIntoView();
+        });
 
         this.session.on("sessionDestroyed", function () {
             console.log("for publisher")
@@ -110,7 +134,8 @@ export class NayyarComponent implements OnInit {
         $('#endBtn').show();
         this.session.signal({
             to: this.stream.connection,
-            data: "hello"
+            data: "hello",
+            type: 'callAccepted'
         }, function (error) {
             if (error) {
                 console.log("signal error ("
@@ -136,7 +161,8 @@ export class NayyarComponent implements OnInit {
         $('#endBtn').show();
         this.session.signal({
             to: this.stream.connection,
-            data: "acceptCall"
+            data: "acceptCall",
+            type: 'endCall'
         }, function (error) {
             if (error) {
                 console.log("signal error ("
@@ -157,5 +183,64 @@ export class NayyarComponent implements OnInit {
             this.session.unsubscribe(this.subscriber);
         }
         this.subscriber = null;
+    }
+
+    fileChangeEvent(fileInput: any) {
+
+        this.image = fileInput.target.files[0];
+
+        if (this.image != undefined) {
+            this.imageFlag = 1;
+            this.imageName = this.image.name;
+            if (FileReader != undefined) {
+                var reader = new FileReader();
+                reader.addEventListener("load", function () {
+                    console.log(reader);
+                }, false);
+                if (this.image) {
+                    reader.readAsDataURL(this.image);
+                }
+            }
+        } else {
+
+        }
+    }
+
+    sendFile() {
+
+        this.imageFlag = 0;
+
+        var url = this.base_path_service.base_path + 'upload/';
+        return new Promise((resolve, reject) => {
+            var formData: any = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("id", 2);
+            formData.append("file", this.image);
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) {
+
+                    console.log(JSON.parse(xhr.response).file, 'success')
+
+                    var mymsg = document.createElement('img');
+                    mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
+                    var msgHistory = document.getElementById('history')
+                    msgHistory.appendChild(mymsg);
+                    mymsg.scrollIntoView();
+
+                    this.session.signal({
+                        type: 'sender',
+                        data: this.base_path_service.base_path + JSON.parse(xhr.response).file
+                    }, function (error) {
+                        if (!error) {
+                            console.log('error')
+                        }
+                    });
+                }
+            }
+            xhr.open("POST", url, true);
+            xhr.send(formData);
+        });
     }
 }

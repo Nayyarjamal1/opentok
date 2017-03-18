@@ -15,9 +15,13 @@ export class FileReceiverComponent implements OnInit {
     apiKey: any;
     sessionId: any;
     token: any;
-    session: any;receiver
+    session: any; receiver
     message: any;
     stream: any;
+    image: any;
+    imageName: any;
+    id: any;
+    imageFlag = 0;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -26,7 +30,29 @@ export class FileReceiverComponent implements OnInit {
         this.textChat();
     }
 
+    fileChangeEvent(fileInput: any) {
+
+        this.image = fileInput.target.files[0];
+
+        if (this.image != undefined) {
+            this.imageFlag = 1;
+            this.imageName = this.image.name;
+            if (FileReader != undefined) {
+                var reader = new FileReader();
+                reader.addEventListener("load", function () {
+                    console.log(reader);
+                }, false);
+                if (this.image) {
+                    reader.readAsDataURL(this.image);
+                }
+            }
+        } else {
+
+        }
+    }
+
     textChat() {
+        this.id = 3;
         var url = this.base_path_service.base_path + 'session/?id=3';
         this.base_path_service.GetRequest(url)
             .subscribe(res => {
@@ -42,8 +68,11 @@ export class FileReceiverComponent implements OnInit {
 
                 this.session.on('signal:receiver', (event) => {
                     console.log(event, "gsffee")
-                    var msg = document.createElement('p');
-                    msg.innerHTML = event.data;
+                    var msg = document.createElement('img');
+                    msg.setAttribute('src', event.data);
+                    // var msgHistory = document.getElementById('history')
+                    // var msg = document.createElement('p');
+                    // msg.innerHTML = event.data;
                     msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
                     var msgHistory = document.getElementById('history')
                     msgHistory.appendChild(msg);
@@ -61,21 +90,40 @@ export class FileReceiverComponent implements OnInit {
             })
     }
 
-    sendMessage(value) {
-        var mymsg = document.createElement('p');
-        mymsg.innerHTML = value;
-        var msgHistory = document.getElementById('history')
-        msgHistory.appendChild(mymsg);
-        mymsg.scrollIntoView();
+    sendFile() {
+        this.imageFlag = 0;
 
-        console.log(value, "dataaaa")
-        this.session.signal({
-            type: 'sender',
-            data: value
-        }, function (error) {
-            if (!error) {
-                value = '';
+        var url = this.base_path_service.base_path + 'upload/';
+        return new Promise((resolve, reject) => {
+            var formData: any = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("id", this.id);
+            formData.append("file", this.image);
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) {
+                    
+                    console.log(JSON.parse(xhr.response).file, 'success')                    
+                    
+                    var mymsg = document.createElement('img');
+                    mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
+                    var msgHistory = document.getElementById('history')
+                    msgHistory.appendChild(mymsg);
+                    mymsg.scrollIntoView();
+                    
+                    this.session.signal({
+                        type: 'sender',
+                        data: this.base_path_service.base_path + JSON.parse(xhr.response).file
+                    }, function (error) {
+                        if (!error) {
+                            console.log('error')
+                        }
+                    });
+                }
             }
+            xhr.open("POST", url, true);
+            xhr.send(formData);
         });
     }
 }

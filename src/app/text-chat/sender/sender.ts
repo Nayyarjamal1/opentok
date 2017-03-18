@@ -50,7 +50,7 @@ export class SenderComponent implements OnInit {
                 });
 
                 this.session.on("signal", (event) => {
-                    console.log(event, "Signal sent from connection " );                    
+                    console.log(event, "Signal sent from connection ");
                 });
 
                 this.session.connect(this.token, (error) => {

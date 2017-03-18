@@ -4,13 +4,23 @@
             <span>{{doc.name}}</span>
         </div>
         <div class="ui-g-6 text-right">
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send File" type="button" (click)="getSessionDetails(3, 'file');"></button>
             <!--<button style="background: #3ba75d; width: 26%; color:white; border:none" pButton
             label="Audio Call" type="button" (click)="getSessionDetails(doc.id)"></button>-->
-            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton
-            label="Video Call" type="button" (click)="getSessionDetails(doc.id)"></button>
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Video Call" type="button" (click)="getSessionDetails(doc.id, 'video')"></button>
         </div>
     </div>
 </div>
 
 <button id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button" (click)="endCall()"></button>
-<!--<div id="myPublisher"> publisher </div>-->
+
+<div class="ui-g" style="padding:30px" *ngIf="showfileSection">
+    <div class="ui-g-12">
+        <div id="history"></div>
+        <input type="file" style="color: transparent; width: 100px;" (change)="fileChangeEvent($event)" fileChangeEvent name="photo"
+            id="upload-photo" />
+        <span *ngIf="imageFlag==0" class="no_file_chosen">No file chosen</span>
+        <span *ngIf="imageFlag==1" class="no_file_chosen">{{imageName}}</span>
+        <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send" type="button" (click)="sendFile(message)"></button>
+    </div>
+</div>

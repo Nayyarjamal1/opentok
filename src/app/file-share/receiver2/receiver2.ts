@@ -6,28 +6,28 @@ declare var OT: any;
 
 
 @Component({
-    selector: 'app-sender',
-    templateUrl: './sender.html',
-    styleUrls: ['./sender.css']
+    selector: 'app-receiver2',
+    templateUrl: './receiver2.html',
+    styleUrls: ['./receiver2.css']
 })
-export class FileSenderComponent implements OnInit {
+export class FileReceiver2Component implements OnInit {
 
     apiKey: any;
     sessionId: any;
     token: any;
-    session: any;
+    session: any; receiver
     message: any;
     stream: any;
     image: any;
     imageName: any;
     id: any;
     imageFlag = 0;
-    showfileSection: boolean = false;
 
     constructor(private base_path_service: GlobalService) {
     }
 
     ngOnInit() {
+        this.textChat();
     }
 
     fileChangeEvent(fileInput: any) {
@@ -51,9 +51,9 @@ export class FileSenderComponent implements OnInit {
         }
     }
 
-    sendFileSection(id) {
-        this.id = id;
-        var url = this.base_path_service.base_path + 'session/?id=3';
+    textChat() {
+        this.id = 3;
+        var url = this.base_path_service.base_path + 'session/?id=1';
         this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
@@ -64,15 +64,15 @@ export class FileSenderComponent implements OnInit {
 
                 this.session.on('sessionConnected', (event) => {
                     console.log("I'm connected")
-                    this.showfileSection = true;
                 })
 
-                this.session.on('signal:sender', (event) => {
+                this.session.on('signal:receiver', (event) => {
                     console.log(event, "gsffee")
-                    // var msg = document.createElement('p');
-                    // msg.innerHTML = event.data;
                     var msg = document.createElement('img');
                     msg.setAttribute('src', event.data);
+                    // var msgHistory = document.getElementById('history')
+                    // var msg = document.createElement('p');
+                    // msg.innerHTML = event.data;
                     msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
                     var msgHistory = document.getElementById('history')
                     msgHistory.appendChild(msg);
@@ -81,6 +81,7 @@ export class FileSenderComponent implements OnInit {
 
                 this.session.on("signal", (event) => {
                     console.log(event, "Signal sent from connection ");
+                    // Process the event.data property, if there is any data.
                 });
 
                 this.session.connect(this.token, (error) => {
@@ -102,16 +103,17 @@ export class FileSenderComponent implements OnInit {
 
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
-                    console.log(JSON.parse(xhr.response).file, 'success')
-
+                    
+                    console.log(JSON.parse(xhr.response).file, 'success')                    
+                    
                     var mymsg = document.createElement('img');
                     mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
                     var msgHistory = document.getElementById('history')
                     msgHistory.appendChild(mymsg);
                     mymsg.scrollIntoView();
-
+                    
                     this.session.signal({
-                        type: 'receiver',
+                        type: 'sender',
                         data: this.base_path_service.base_path + JSON.parse(xhr.response).file
                     }, function (error) {
                         if (!error) {
@@ -123,6 +125,5 @@ export class FileSenderComponent implements OnInit {
             xhr.open("POST", url, true);
             xhr.send(formData);
         });
-
     }
 }

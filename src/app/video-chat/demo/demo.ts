@@ -24,7 +24,10 @@ export class DemoComponent implements OnInit {
     id: any;
     subscriber: any;
     publisher: any;
-
+    image: any;
+    imageName: any;
+    imageFlag = 0;
+    showfileSection: boolean = false;
     constructor(private base_path_service: GlobalService) {
     }
 
@@ -42,8 +45,29 @@ export class DemoComponent implements OnInit {
             })
     }
 
-    getSessionDetails(id) {
-        $('#endBtn').show();
+    fileChangeEvent(fileInput: any) {
+
+        this.image = fileInput.target.files[0];
+
+        if (this.image != undefined) {
+            this.imageFlag = 1;
+            this.imageName = this.image.name;
+            if (FileReader != undefined) {
+                var reader = new FileReader();
+                reader.addEventListener("load", function () {
+                    console.log(reader);
+                }, false);
+                if (this.image) {
+                    reader.readAsDataURL(this.image);
+                }
+            }
+        } else {
+
+        }
+    }
+
+    getSessionDetails(id, type) {
+
         this.id = id;
         if (localStorage.getItem('session_details')) {
             var data = JSON.parse(localStorage.getItem('session_details'))
@@ -51,7 +75,11 @@ export class DemoComponent implements OnInit {
             this.sessionId = data.sessionId;
             this.token = data.token;
             // console.log(this.apiKey, this.sessionId, this.token, "localStorage")
-            this.initializeSession();
+            if (type == 'file') {
+                this.sendFileSection(id)
+            } else {
+                this.initializeSession();
+            }
         } else {
             var url = this.base_path_service.base_path + 'session/?id=' + id;
             this.base_path_service.GetRequest(url)
@@ -67,13 +95,82 @@ export class DemoComponent implements OnInit {
                     }
 
                     localStorage.setItem('session_details', JSON.stringify(data))
-                    this.initializeSession();
+
+                    if (type == 'file') {
+                        this.sendFileSection(id)
+                    } else {
+                        this.initializeSession();
+                    }
                 })
         }
     }
 
-    initializeSession() {
+    sendFileSection(id) {
 
+        this.session = OT.initSession(this.apiKey, this.sessionId);
+
+        this.session.on('sessionConnected', (event) => {
+            console.log("I'm connected")
+            this.showfileSection = true;
+        })
+
+        this.session.on('signal:sender', (event) => {
+            console.log(event, "gsffee")
+            // var msg = document.createElement('p');
+            // msg.innerHTML = event.data;
+            var msg = document.createElement('img');
+            msg.setAttribute('src', event.data);
+            msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
+            var msgHistory = document.getElementById('history')
+            msgHistory.appendChild(msg);
+            msg.scrollIntoView();
+        });
+
+        this.session.connect(this.token, (error) => {
+            console.log(error, "connection error")
+        })
+    }
+
+    sendFile() {
+
+        this.imageFlag = 0;
+
+        var url = this.base_path_service.base_path + 'upload/';
+        return new Promise((resolve, reject) => {
+            var formData: any = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("id", this.id);
+            formData.append("file", this.image);
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) {
+                    console.log(JSON.parse(xhr.response).file, 'success')
+
+                    var mymsg = document.createElement('img');
+                    mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
+                    var msgHistory = document.getElementById('history')
+                    msgHistory.appendChild(mymsg);
+                    mymsg.scrollIntoView();
+
+                    this.session.signal({
+                        type: 'receiver',
+                        data: this.base_path_service.base_path + JSON.parse(xhr.response).file
+                    }, function (error) {
+                        if (!error) {
+                            console.log('error')
+                        }
+                    });
+                }
+            }
+            xhr.open("POST", url, true);
+            xhr.send(formData);
+        });
+
+    }
+
+    initializeSession() {
+        $('#endBtn').show();
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
         this.session.on('sessionConnected', (event) => {
@@ -88,7 +185,21 @@ export class DemoComponent implements OnInit {
                 };
                 this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
+
+                // this.session.signal({
+                //     data: "acceptCall",
+                //     type: 'sed'
+                // }, function (error) {
+                //     if (error) {
+                //         console.log("signal error ("
+                //             + error.name
+                //             + "): " + error.message);
+                //     } else {
+                //         console.log("signal sent.");
+                //     }
+                // });
             }
+
         });
 
         this.session.on('streamCreated', (event) => {
@@ -100,15 +211,15 @@ export class DemoComponent implements OnInit {
             }
         });
 
-        this.session.on('signal', (event) => {
-            // console.log("Signal sent from connection " + event.from.id);
-            console.log("signal event fired")
-            if (event.data == 'endCall') {
-                this.endCall();
-            } else {
-                this.subscribeToStream(this.stream);
-            }
-        });
+        this.session.on('signal:callAccepted', (event) => {
+            console.log('signal call accepted')
+            this.subscribeToStream(this.stream);
+        })
+
+        this.session.on('signal:endCall', (event) => {
+            console.log('signal call end')
+            this.endCall();
+        })
 
         this.session.connect(this.token, (error) => {
             console.log(error, "connection error")

@@ -20,6 +20,7 @@ import { ReceiverComponent } from './text-chat/receiver/receiver'
 
 import { FileReceiverComponent } from './file-share/receiver/receiver'
 import { FileSenderComponent } from './file-share/sender/sender'
+import { FileReceiver2Component } from './file-share/receiver2/receiver2'
 
 import { DialogModule, ButtonModule, InputTextModule} from 'primeng/primeng'
 
@@ -35,7 +36,8 @@ import { DialogModule, ButtonModule, InputTextModule} from 'primeng/primeng'
     ReceiverComponent,
     
     FileReceiverComponent,
-    FileSenderComponent
+    FileSenderComponent,
+    FileReceiver2Component
   ],
   imports: [
     BrowserModule,
