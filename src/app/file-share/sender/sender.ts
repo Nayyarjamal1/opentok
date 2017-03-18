@@ -1,16 +1,16 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { GlobalService } from '../GlobalService';
+import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
 declare var OT: any;
 
 
 @Component({
-    selector: 'app-text-chat-sender',
-    templateUrl: './text-chat-sender.html',
-    styleUrls: ['./text-chat-sender.css']
+    selector: 'app-sender',
+    templateUrl: './sender.html',
+    styleUrls: ['./sender.css']
 })
-export class SenderComponent implements OnInit {
+export class FileSenderComponent implements OnInit {
 
     apiKey: any;
     sessionId: any;

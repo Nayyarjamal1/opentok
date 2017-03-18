@@ -1,0 +1,6 @@
+<p-dialog header="Wikipedia on MySwaasth.com" width="700" height="500" [(visible)]="dialog" modal="modal" showEffect="fade">
+    <button style="background: #3ba75d; width: 26%; color:white" pButton label="accept" type="button" (click)="acceptCall()"></button>
+    <button style="background: red; width: 26%;color:white" pButton label="reject" type="button" (click)="rejectCall()"></button>
+</p-dialog>
+
+<button id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button" (click)="endCall()"></button>

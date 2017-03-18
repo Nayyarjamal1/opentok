@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { GlobalService } from '../GlobalService';
+import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
 declare var OT: any;

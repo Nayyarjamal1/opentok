@@ -1,16 +1,16 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { GlobalService } from '../GlobalService';
+import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
 declare var OT: any;
 
 
 @Component({
-    selector: 'app-subscriber-demo',
-    templateUrl: './subscriber-demo.html',
-    styleUrls: ['./subscriber-demo.css']
+    selector: 'app-anmol',
+    templateUrl: './anmol.html',
+    styleUrls: ['./anmol.css']
 })
-export class SubscriberDemoComponent implements OnInit {
+export class AnmolComponent implements OnInit {
 
     apiKey: any;
     sessionId: any;
@@ -22,8 +22,8 @@ export class SubscriberDemoComponent implements OnInit {
     stream: any;
     doctorList: Array<any> = [];
     noCallFound: boolean = true;
-    publisher: any;
     subscriber: any;
+    publisher: any;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -31,23 +31,43 @@ export class SubscriberDemoComponent implements OnInit {
 
     ngOnInit() {
         $('#endBtn').hide();
+        $('#startBtn').hide();
         this.getSessionDetails();
     }
 
     getSessionDetails() {
-        var url = 'https://chat.sia.co.in/session/?id=3';
-        this.base_path_service.GetRequest(url)
-            .subscribe(res => {
-                this.apiKey = res[0].json.apiKey;
-                this.sessionId = res[0].json.sessionId;
-                this.token = res[0].json.token;
-                this.session = OT.initSession(this.apiKey, this.sessionId);
 
-                this.initializeSession();
-            })
+        if (localStorage.getItem('session_details')) {
+            var data = JSON.parse(localStorage.getItem('session_details'))
+            this.apiKey = data.apiKey;
+            this.sessionId = data.sessionId;
+            this.token = data.token;
+            // console.log(this.apiKey, this.sessionId, this.token, "localStorage")
+            this.initializeSession();
+        } else {
+            var url = this.base_path_service.base_path + 'session/?id=3';
+            this.base_path_service.GetRequest(url)
+                .subscribe(res => {
+                    this.apiKey = res[0].json.apiKey;
+                    this.sessionId = res[0].json.sessionId;
+                    this.token = res[0].json.token;
+
+                    var data = {
+                        "apiKey": res[0].json.apiKey,
+                        "sessionId": res[0].json.sessionId,
+                        "token": res[0].json.token
+                    }
+
+                    localStorage.setItem('session_details', JSON.stringify(data))
+                    this.initializeSession();
+                })
+        }
     }
 
-    initializeSession() {        
+    initializeSession() {
+
+        this.session = OT.initSession(this.apiKey, this.sessionId);
+
         this.session.on('sessionConnected', (event) => {
             console.log("Hi i'm connected")
             if (!this.publisher) {
@@ -89,7 +109,7 @@ export class SubscriberDemoComponent implements OnInit {
         $('#endBtn').show();
         this.session.signal({
             to: this.stream.connection,
-            data: "hello"
+            data: "acceptCall"
         }, function (error) {
             if (error) {
                 console.log("signal error ("
@@ -111,14 +131,38 @@ export class SubscriberDemoComponent implements OnInit {
         this.subscriber = this.session.subscribe(this.stream, div.id);
     }
 
-    endCall() {        
-        if (this.subscriber) {
-            this.session.unsubscribe(this.subscriber);
-        }
-        this.subscriber = null;
+    endCall() {
+        this.session.signal({
+            to: this.stream.connection,
+            data: "endCall"
+        }, function (error) {
+            if (error) {
+                console.log("signal error ("
+                    + error.name
+                    + "): " + error.message);
+            } else {
+                console.log("signal sent.");
+            }
+        });
+        // $('#endBtn').hide();
+        // this.session.disconnect();
+        // if (this.publisher) {
+        //     this.session.unpublish(this.publisher);
+        // }
+        // this.publisher = null;
+        // if (this.subscriber) {
+        //     this.session.unsubscribe(this.subscriber);
+        // }
+        // this.subscriber = null;
+
     }
 
-    rejectCall() {        
+    rejectCall() {
+        this.session.disconnect();
+        if (this.publisher) {
+            this.session.unpublish(this.publisher);
+        }
+        this.publisher = null;
         if (this.subscriber) {
             this.session.unsubscribe(this.subscriber);
         }

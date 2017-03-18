@@ -10,47 +10,45 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { AppComponent } from './app.component';
 import { GlobalService } from './GlobalService';
 
-import { DemoComponent }   from './demo/demo';
-import { CallComponent }   from './call/call';
-import { AnswerComponent } from './answer/answer'
-import { PublisherComponent } from './publisher/publisher'
-import { SumitComponent } from './sumit/sumit'
-import { NayyarComponent } from './nayyar/nayyar';
-import { AnmolComponent } from './anmol/anmol';
-import { SubscriberDemoComponent } from './subscriber-demo/subscriber-demo'
-import { PublisherDemoComponent } from './publisher-demo/publisher-demo'
-import { SenderComponent } from './text-chat-sender/text-chat-sender'
-import { ReceiverComponent } from './text-chat-reciever/text-chat-reciever'
+import { DemoComponent }   from './video-chat/demo/demo';
+import { PublisherComponent } from './audio-chat/publisher/publisher'
+import { SumitComponent } from './video-chat/sumit/sumit'
+import { NayyarComponent } from './video-chat/nayyar/nayyar'
+import { AnmolComponent } from './video-chat/anmol/anmol'
+import { SenderComponent } from './text-chat/sender/sender'
+import { ReceiverComponent } from './text-chat/receiver/receiver'
+
+import { FileReceiverComponent } from './file-share/receiver/receiver'
+import { FileSenderComponent } from './file-share/sender/sender'
 
 import { DialogModule, ButtonModule, InputTextModule} from 'primeng/primeng'
 
 @NgModule({
   declarations: [
     AppComponent,
-    CallComponent,
-    AnswerComponent,
     SumitComponent,
     NayyarComponent,
     DemoComponent,
     AnmolComponent,
     PublisherComponent,
-    SubscriberDemoComponent,
-    PublisherDemoComponent,
     SenderComponent,
-    ReceiverComponent
+    ReceiverComponent,
+    
+    FileReceiverComponent,
+    FileSenderComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
-    routing,    
+    routing,
     ReactiveFormsModule,
-    
+
     DialogModule,
     ButtonModule,
     InputTextModule
   ],
-  providers: [GlobalService, {provide: LocationStrategy, useClass: HashLocationStrategy}],
+  providers: [GlobalService, { provide: LocationStrategy, useClass: HashLocationStrategy }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

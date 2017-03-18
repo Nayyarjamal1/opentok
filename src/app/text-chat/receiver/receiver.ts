@@ -1,14 +1,14 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
-import { GlobalService } from '../GlobalService';
+import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
 declare var OT: any;
 
 
 @Component({
-    selector: 'app-text-chat-reciever',
-    templateUrl: './text-chat-reciever.html',
-    styleUrls: ['./text-chat-reciever.css']
+    selector: 'app-receiver',
+    templateUrl: './receiver.html',
+    styleUrls: ['./receiver.css']
 })
 export class ReceiverComponent implements OnInit {
 

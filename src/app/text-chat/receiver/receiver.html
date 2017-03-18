@@ -1,0 +1,7 @@
+<div class="ui-g" style="padding:30px">
+    <div class="ui-g-12">
+        <div id="history"></div>
+        <input pInputText type="text" placeholder="Type Something" [(ngModel)]="message" autocomplete="on">
+        <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send" type="button" (click)="sendMessage(message)"></button>
+    </div>
+</div>
