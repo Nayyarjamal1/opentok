@@ -5,13 +5,12 @@
         </div>
         <div class="ui-g-6 text-right">
             <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send File" type="button" (click)="getSessionDetails(3, 'file');"></button>
-            <!--<button style="background: #3ba75d; width: 26%; color:white; border:none" pButton
-            label="Audio Call" type="button" (click)="getSessionDetails(doc.id)"></button>-->
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Audio Call" type="button" (click)="getSessionDetails(doc.id, 'audio')"></button>
             <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Video Call" type="button" (click)="getSessionDetails(doc.id, 'video')"></button>
         </div>
     </div>
 </div>
-
+<!--<button id="end" style="background: #3ba75d; width: 13%;" pButton label="End" type="button" (click)="end()"></button>-->
 <button id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button" (click)="endCall()"></button>
 
 <div class="ui-g" style="padding:30px" *ngIf="showfileSection">
