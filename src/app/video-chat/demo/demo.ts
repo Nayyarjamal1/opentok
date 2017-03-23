@@ -91,6 +91,7 @@ export class DemoComponent implements OnInit {
 
         this.session.on("sessionConnected", (event) => {
             this.connectionInfo = true;
+            $('#endBtn').show();
         })
 
         this.session.on('connectionCreated', (event) => {
@@ -172,6 +173,7 @@ export class DemoComponent implements OnInit {
 
         this.session.on('signal:REJECT', (event) => {
             console.log('reject call')
+            $('#endBtn').hide();
             this.session.disconnect()
             if (this.publisher) {
                 this.session.unpublish(this.publisher);
@@ -181,6 +183,7 @@ export class DemoComponent implements OnInit {
                 this.session.unsubscribe(this.subscriber);
             }
             this.subscriber = null;
+            this.connectionInfo = false;
         })
 
         this.session.on('connectionDestroyed', (event) => {

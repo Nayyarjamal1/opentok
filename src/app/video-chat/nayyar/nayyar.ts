@@ -198,6 +198,8 @@ export class NayyarComponent implements OnInit {
 
     endCall() {
         $('#endBtn').hide();
+        this.dialog = false;
+
         this.session.signal({
             type: 'TERMINATED'
         }, function (error) {
@@ -219,7 +221,7 @@ export class NayyarComponent implements OnInit {
         }
         this.subscriber = null;
         $('#myPublisher').hide();
-        $('stream-' + this.stream.streamId).hide();
+        // $('stream-' + this.stream.streamId).hide();
         this.connectionInfo = false;
         this.getSessionDetails();
     }
@@ -247,6 +249,7 @@ export class NayyarComponent implements OnInit {
             this.session.unsubscribe(this.subscriber);
         }
         this.subscriber = null;
+        this.connectionInfo = false;
         this.getSessionDetails();
     }
 
