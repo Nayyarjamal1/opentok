@@ -30,6 +30,7 @@ export class SumitComponent implements OnInit {
     id: any;
     imageFlag = 0;
     callType: any;
+    connectionInfo:boolean=false;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -41,46 +42,39 @@ export class SumitComponent implements OnInit {
     }
 
     getSessionDetails() {
-        if (localStorage.getItem('session_details')) {
-            var data = JSON.parse(localStorage.getItem('session_details'))
-            this.apiKey = data.apiKey;
-            this.sessionId = data.sessionId;
-            this.token = data.token;
-            // console.log(this.apiKey, this.sessionId, this.token, "localStorage")
-            this.initializeSession();
-        } else {
-            var url = 'https://chat.sia.co.in/session/?id=1';
-            this.base_path_service.GetRequest(url)
-                .subscribe(res => {
-                    this.apiKey = res[0].json.apiKey;
-                    this.sessionId = res[0].json.sessionId;
-                    this.token = res[0].json.token;
-                    this.session = OT.initSession(this.apiKey, this.sessionId);
-
-                    var data = {
-                        "apiKey": res[0].json.apiKey,
-                        "sessionId": res[0].json.sessionId,
-                        "token": res[0].json.token
-                    }
-
-                    localStorage.setItem('session_details', JSON.stringify(data))
-                    this.initializeSession();
-                })
-        }
+        var url = 'https://chat.sia.co.in/session/?id=1';
+        this.base_path_service.GetRequest(url)
+            .subscribe(res => {
+                this.apiKey = res[0].json.apiKey;
+                this.sessionId = res[0].json.sessionId;
+                this.token = res[0].json.token;
+                this.session = OT.initSession(this.apiKey, this.sessionId);
+                this.initializeSession();
+            })
     }
 
     initializeSession() {
 
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
+        this.session.on("sessionConnected", (event) => {
+            this.connectionInfo = true;            
+        })
+
+        this.session.on('connectionCreated', (event) => {
+            if (event.connection.connectionId != this.session.connection.connectionId) {
+                console.log("Hi i'm connected");
+            }
+        })
+
         this.session.on('signal:VIDEO', (event) => {
-            console.log('video')
+            console.log('video')            
             this.callType = 'video';
             this.dialog = true;
         })
 
         this.session.on('signal:AUDIO', (event) => {
-            console.log('audio')
+            console.log('audio')            
             this.callType = 'audio';
             this.dialog = true;
         })
@@ -90,6 +84,23 @@ export class SumitComponent implements OnInit {
             this.endCall();
         })
 
+        // this.session.on('sessionDisconnected', (event) => {
+        //     this.session.disconnect()
+        // })
+
+        this.session.on('connectionDestroyed', (event) => {
+            console.log('connection destroyed')
+            this.session.disconnect()
+            if (this.publisher) {
+                this.session.unpublish(this.publisher);
+            }
+            this.publisher = null;
+            if (this.subscriber) {
+                this.session.unsubscribe(this.subscriber);
+            }
+            this.subscriber = null;
+        })
+        
         this.session.on('signal:receiver', (event) => {
             console.log(event, "gsffee")
             var msg = document.createElement('img');
@@ -111,7 +122,11 @@ export class SumitComponent implements OnInit {
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
         if (this.callType == 'audio') {
-            var subOptions = { videoSource: null };
+            var subOptions = {
+                subscribeToAudio: true,
+                subscribeToVideo: false,
+                videoSource: null
+            };
             this.session.subscribe(this.stream, div.id);
             this.subscriber = this.session.subscribe(this.stream, div.id, subOptions);
         } else if (this.callType == 'video') {
@@ -125,34 +140,27 @@ export class SumitComponent implements OnInit {
         this.dialog = false;
         console.log(this.callType, "call type")
         if (!this.publisher) {
-            var publisherDiv = document.createElement('div');
-            publisherDiv.setAttribute('id', 'myPublisher');
-            document.body.appendChild(publisherDiv);
+            // var publisherDiv = document.createElement('div');
+            // publisherDiv.setAttribute('id', 'myPublisher');
+            // document.body.appendChild(publisherDiv);
             if (this.callType == 'audio') {
                 var pubOptions = {
                     width: 264,
                     height: 186,
-                    videoSource: null
+                    videoSource: null,
+                    publishAudio: true,
+                    publishVideo: false
                 };
-                this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
+                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
             } else if (this.callType == 'video') {
                 var publisherProps = {
                     width: 264,
                     height: 186,
                 };
-                this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
+                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
             }
-            // var publisherDiv = document.createElement('div');
-            // publisherDiv.setAttribute('id', 'myPublisher');
-            // document.body.appendChild(publisherDiv);
-            // var publisherProps = {
-            //     width: 264,
-            //     height: 186,
-            // };
-            // this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
-            // this.session.publish(this.publisher);
         }
 
         this.session.on('streamCreated', (event) => {
@@ -166,7 +174,36 @@ export class SumitComponent implements OnInit {
     }
 
     endCall() {
-        $('#endBtn').show();
+        $('#endBtn').hide();
+        this.session.signal({            
+            type: 'TERMINATED'
+        }, function (error) {
+            if (error) {
+                console.log("signal error ("
+                    + error.name
+                    + "): " + error.message);
+            } else {
+                console.log("signal sent.");
+            }
+        });
+        this.session.disconnect();
+        if (this.publisher) {
+            this.session.unpublish(this.publisher);
+        }
+        this.publisher = null;
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
+        $('#myPublisher').hide();    
+        $('stream-' + this.stream.streamId).hide();
+        this.connectionInfo = false;
+        this.getSessionDetails();
+    }
+
+    rejectCall() {
+
+        this.dialog = false;
         this.session.signal({
             to: this.stream.connection,
             type: 'TERMINATED'
@@ -179,18 +216,7 @@ export class SumitComponent implements OnInit {
                 console.log("signal sent.");
             }
         });
-        
-        if (this.publisher) {
-            this.session.unpublish(this.publisher);
-        }
-        this.publisher = null;
-        if (this.subscriber) {
-            this.session.unsubscribe(this.subscriber);
-        }
-        this.subscriber = null;
-    }
 
-    rejectCall() {
         if (this.publisher) {
             this.session.unpublish(this.publisher);
         }

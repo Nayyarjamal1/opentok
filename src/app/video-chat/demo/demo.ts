@@ -69,44 +69,169 @@ export class DemoComponent implements OnInit {
     getSessionDetails(id, type) {
 
         this.id = id;
-        console.log(localStorage.getItem('id'), "iddddddddddddd")
-        if (localStorage.getItem('id') == id) {
-            if (localStorage.getItem('session_details')) {
-                var data = JSON.parse(localStorage.getItem('session_details'))
-                this.apiKey = data.apiKey;
-                this.sessionId = data.sessionId;
-                this.token = data.token;
-                // console.log(this.apiKey, this.sessionId, this.token, "localStorage")
+
+        var url = this.base_path_service.base_path + 'session/?id=' + id;
+        this.base_path_service.GetRequest(url)
+            .subscribe(res => {
+                this.apiKey = res[0].json.apiKey;
+                this.sessionId = res[0].json.sessionId;
+                this.token = res[0].json.token;
+
                 if (type == 'file') {
                     this.sendFileSection(id)
                 } else {
                     this.initializeSession(type);
                 }
+            })
+    }
+
+    initializeSession(type) {
+        this.session = OT.initSession(this.apiKey, this.sessionId);
+        this.session.on('connectionCreated', (event) => {
+            if (event.connection.connectionId != this.session.connection.connectionId) {
+                console.log('Another client connected.');
+
+                if (type == 'video') {
+                    this.session.signal({
+                        type: 'VIDEO'
+                    }, function (error) {
+                        if (error) {
+                            console.log("signal error ("
+                                + error.name
+                                + "): " + error.message);
+                        } else {
+                            console.log("signal sent.");
+                        }
+                    });
+                } else if (type == 'audio') {
+                    this.session.signal({
+                        type: 'AUDIO'
+                    }, function (error) {
+                        if (error) {
+                            console.log("signal error ("
+                                + error.name
+                                + "): " + error.message);
+                        } else {
+                            console.log("signal sent.");
+                        }
+                    });
+                }
             }
-        } else {
-            var url = this.base_path_service.base_path + 'session/?id=' + id;
-            this.base_path_service.GetRequest(url)
-                .subscribe(res => {
-                    this.apiKey = res[0].json.apiKey;
-                    this.sessionId = res[0].json.sessionId;
-                    this.token = res[0].json.token;
+        })
 
-                    var data = {
-                        "apiKey": res[0].json.apiKey,
-                        "sessionId": res[0].json.sessionId,
-                        "token": res[0].json.token
-                    }
+        this.session.on('streamCreated', (event) => {
+            console.log(event, "stream")
+            $('#endBtn').show();
+            if (!this.publisher) {
+                // var publisherDiv = document.createElement('div');
+                // publisherDiv.setAttribute('id', 'myPublisher');
+                // document.body.appendChild(publisherDiv);
+                if (type == 'audio') {
+                    var pubOptions = {
+                        width: 264,
+                        height: 186,
+                        videoSource: null,
+                        publishAudio: true,
+                        publishVideo: false
+                    };
+                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
+                    this.session.publish(this.publisher);
+                } else if (type == 'video') {
+                    var publisherProps = {
+                        width: 264,
+                        height: 186,
+                    };
+                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
+                    this.session.publish(this.publisher);
+                }
 
-                    localStorage.setItem('session_details', JSON.stringify(data))
-                    localStorage.setItem('id', id)
+            }
+            for (let i = 0; i < event.streams.length; i++) {
+                if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
+                    this.stream = event.streams[i];
+                    this.subscribeToStream(this.stream, type);
+                }
+            }
+        });
 
-                    if (type == 'file') {
-                        this.sendFileSection(id)
-                    } else {
-                        this.initializeSession(type);
-                    }
-                })
+        this.session.on('signal:TERMINATED', (event) => {
+            console.log('signal call end')
+            this.end();
+        })
+
+        this.session.on('connectionDestroyed', (event) => {
+            console.log('connection destroyed')
+            this.session.disconnect()
+            if (this.publisher) {
+                this.session.unpublish(this.publisher);
+            }
+            this.publisher = null;
+            if (this.subscriber) {
+                this.session.unsubscribe(this.subscriber);
+            }
+            this.subscriber = null;
+        })
+
+        this.session.connect(this.token, (error) => {
+            console.log(error, "connection error")
+        })
+    }
+
+    subscribeToStream(stream, type) {
+        console.log(stream, 'helloo')
+        this.stream = stream;
+        var div = document.createElement('div');
+        div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
+        div.setAttribute('id', 'stream-' + stream.streamId);
+        document.body.appendChild(div);
+        if (type == 'video') {
+            this.session.subscribe(stream, div.id);
+            this.subscriber = this.session.subscribe(stream, div.id);
+        } else if (type == 'audio') {
+            var subOptions = {
+                subscribeToAudio: true,
+                subscribeToVideo: false,
+                videoSource: null
+            };
+            this.session.subscribe(stream, div.id);
+            this.subscriber = this.session.subscribe(stream, div.id, subOptions);
         }
+    }
+
+    end() {
+        this.session.disconnect();
+        if (this.publisher) {
+            this.session.unpublish(this.publisher);
+        }
+        this.publisher = null;
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
+    }
+
+    endCall() {
+        $('#endBtn').hide();
+        this.session.signal({
+            type: 'TERMINATED'
+        }, function (error) {
+            if (error) {
+                console.log("signal error ("
+                    + error.name
+                    + "): " + error.message);
+            } else {
+                console.log("signal sent.");
+            }
+        });
+        this.session.disconnect();
+        if (this.publisher) {
+            this.session.unpublish(this.publisher);
+        }
+        this.publisher = null;
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
     }
 
     sendFileSection(id) {
@@ -120,8 +245,6 @@ export class DemoComponent implements OnInit {
 
         this.session.on('signal:sender', (event) => {
             console.log(event, "gsffee")
-            // var msg = document.createElement('p');
-            // msg.innerHTML = event.data;
             var msg = document.createElement('img');
             msg.setAttribute('src', event.data);
             msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
@@ -171,135 +294,5 @@ export class DemoComponent implements OnInit {
             xhr.send(formData);
         });
 
-    }
-
-    initializeSession(type) {
-        // $('#end').show();
-        this.session = OT.initSession(this.apiKey, this.sessionId);
-
-        this.session.on('connectionCreated', (event) => {
-            console.log(event, "connection created")
-            if (type == 'video') {
-                this.session.signal({
-                    type: 'VIDEO'
-                }, function (error) {
-                    if (error) {
-                        console.log("signal error ("
-                            + error.name
-                            + "): " + error.message);
-                    } else {
-                        console.log("signal sent.");
-                    }
-                });
-            } else if (type == 'audio') {
-                this.session.signal({
-                    type: 'AUDIO'
-                }, function (error) {
-                    if (error) {
-                        console.log("signal error ("
-                            + error.name
-                            + "): " + error.message);
-                    } else {
-                        console.log("signal sent.");
-                    }
-                });
-            }
-        })
-
-        this.session.on('streamCreated', (event) => {
-            console.log(event, "stream")
-            $('#endBtn').show();
-            // $('#end').hide();
-            if (!this.publisher) {
-                var publisherDiv = document.createElement('div');
-                publisherDiv.setAttribute('id', 'myPublisher');
-                document.body.appendChild(publisherDiv);
-                if (type == 'audio') {
-                    var pubOptions = {
-                        width: 264,
-                        height: 186,
-                        videoSource: null
-                    };
-                    this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
-                    this.session.publish(this.publisher);
-                } else if (type == 'video') {
-                    var publisherProps = {
-                        width: 264,
-                        height: 186,
-                    };
-                    this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
-                    this.session.publish(this.publisher);
-                }
-
-            }
-            for (let i = 0; i < event.streams.length; i++) {
-                if (this.session.connection.connectionId != event.streams[i].connection.connectionId) {
-                    this.stream = event.streams[i];
-                    this.subscribeToStream(this.stream, type);
-                }
-            }
-        });
-
-        this.session.on('signal:TERMINATED', (event) => {
-            console.log('signal call end')
-            this.end();
-        })
-
-        this.session.connect(this.token, (error) => {
-            console.log(error, "connection error")
-        })
-    }
-
-    subscribeToStream(stream, type) {
-        console.log(stream, 'helloo')
-        this.stream = stream;
-        var div = document.createElement('div');
-        // div.innerHTML = 'subscriber';
-        div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
-        div.setAttribute('id', 'stream-' + stream.streamId);
-        document.body.appendChild(div);
-        if (type == 'video') {
-            this.session.subscribe(stream, div.id);
-            this.subscriber = this.session.subscribe(stream, div.id);
-        } if (type == 'audio') {
-            var subOptions = { videoSource: null };
-            this.session.subscribe(stream, div.id);
-            this.subscriber = this.session.subscribe(stream, div.id, subOptions);
-        }
-    }
-
-    end() {
-        this.session.disconnect();
-        if (this.publisher) {
-            this.session.unpublish(this.publisher);
-        }
-        this.publisher = null;
-        if (this.subscriber) {
-            this.session.unsubscribe(this.subscriber);
-        }
-        this.subscriber = null;
-    }
-
-    endCall() {        
-        this.session.signal({
-            type: 'TERMINATED'
-        }, function (error) {
-            if (error) {
-                console.log("signal error ("
-                    + error.name
-                    + "): " + error.message);
-            } else {
-                console.log("signal sent.");
-            }
-        });
-        this.session.disconnect();
-        if (this.publisher) {
-            this.session.unpublish(this.publisher);
-        }
-        this.publisher = null;
-        if (this.subscriber) {
-            this.session.unsubscribe(this.subscriber);
-        }
-        this.subscriber = null;
     }
 }
