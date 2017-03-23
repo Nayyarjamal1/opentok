@@ -30,6 +30,7 @@ export class AnmolComponent implements OnInit {
     imageFlag = 0;
     callType: any;
     connectionInfo: boolean = false;
+    connectionID: any;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -61,6 +62,7 @@ export class AnmolComponent implements OnInit {
         })
 
         this.session.on('connectionCreated', (event) => {
+            this.connectionID = event.connection.connectionId;
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log("Hi i'm connected");
             }
@@ -76,6 +78,12 @@ export class AnmolComponent implements OnInit {
             console.log('audio')
             this.callType = 'audio';
             this.dialog = true;
+        })
+
+        this.session.on('signal:ACCEPT', (event) => {            
+            if (this.connectionID == event.data) {
+                console.log(event.data, 'notMatched')
+            }
         })
 
         this.session.on('signal:TERMINATED', (event) => {
@@ -197,7 +205,7 @@ export class AnmolComponent implements OnInit {
     endCall() {
         $('#endBtn').hide();
         this.dialog = false;
-        
+
         this.session.signal({
             type: 'TERMINATED'
         }, function (error) {

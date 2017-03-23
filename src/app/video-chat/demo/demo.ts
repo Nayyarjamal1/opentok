@@ -167,8 +167,8 @@ export class DemoComponent implements OnInit {
             this.end();
         })
 
-        this.session.on('signal:ACCEPT', (event) => {
-            console.log('signal accepted')
+        this.session.on('signal:ACCEPT', (event) => {            
+            console.log(event.data, 'signal accepted')
         })
 
         this.session.on('signal:REJECT', (event) => {

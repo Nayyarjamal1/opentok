@@ -31,6 +31,7 @@ export class SumitComponent implements OnInit {
     imageFlag = 0;
     callType: any;
     connectionInfo: boolean = false;
+    connectionID:any;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -62,6 +63,7 @@ export class SumitComponent implements OnInit {
         })
 
         this.session.on('connectionCreated', (event) => {
+            this.connectionID = event.connection.connectionId
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log("Hi i'm connected");
             }
@@ -77,6 +79,13 @@ export class SumitComponent implements OnInit {
             console.log('audio')
             this.callType = 'audio';
             this.dialog = true;
+        })
+        
+        this.session.on('signal:ACCEPT', (event) => {  
+            // console.log(this.connectionID, "*****" +event.data, 'if notMatched')                   
+           if(this.connectionID == event.data){
+              console.log(event.data, 'notMatched')   
+           }
         })
 
         this.session.on('signal:TERMINATED', (event) => {
@@ -146,7 +155,8 @@ export class SumitComponent implements OnInit {
     acceptCall() {
 
         this.session.signal({
-            type: 'ACCEPT'
+            type: 'ACCEPT',
+            data: this.connectionID
         }, function (error) {
             if (error) {
                 console.log("signal error ("

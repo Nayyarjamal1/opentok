@@ -31,6 +31,7 @@ export class NayyarComponent implements OnInit {
     imageFlag = 0;
     callType: any;
     connectionInfo: boolean = false;
+    connectionID: any;
 
     constructor(private base_path_service: GlobalService) {
     }
@@ -63,6 +64,7 @@ export class NayyarComponent implements OnInit {
         })
 
         this.session.on('connectionCreated', (event) => {
+            this.connectionID = event.connection.connectionId;
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log("Hi i'm connected");
             }
@@ -78,6 +80,13 @@ export class NayyarComponent implements OnInit {
             console.log('audio')
             this.callType = 'audio';
             this.dialog = true;
+        })
+
+        this.session.on('signal:ACCEPT', (event) => {
+            //  console.log(this.connectionID, "*****" +event.data, 'if notMatched')
+            if (this.connectionID == event.data) {
+                console.log(event.data, 'notMatched')
+            }
         })
 
         this.session.on('signal:TERMINATED', (event) => {
