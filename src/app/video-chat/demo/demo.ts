@@ -134,7 +134,7 @@ export class DemoComponent implements OnInit {
                         publishAudio: true,
                         publishVideo: false
                     };
-                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
+                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
                     this.session.publish(this.publisher);
                 } else if (type == 'video') {
                     var publisherProps = {
@@ -157,6 +157,10 @@ export class DemoComponent implements OnInit {
         this.session.on('signal:TERMINATED', (event) => {
             console.log('signal call end')
             this.end();
+        })
+
+        this.session.on('signal:ACCEPT', (event) => {
+            console.log('signal accepted')            
         })
 
         this.session.on('connectionDestroyed', (event) => {
