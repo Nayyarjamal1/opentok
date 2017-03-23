@@ -2,7 +2,8 @@
     <button style="background: #3ba75d; width: 26%; color:white" pButton label="accept" type="button" (click)="acceptCall()"></button>
     <button style="background: red; width: 26%;color:white" pButton label="reject" type="button" (click)="rejectCall()"></button>
 </p-dialog>
-
+<p *ngIf="connectionInfo" style="font-size:24px; text-align:center">You are connected</p>
+<div id="myPublisher" style="width: 264;height: 186;"></div>
 <button id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button" (click)="endCall()"></button>
 
 

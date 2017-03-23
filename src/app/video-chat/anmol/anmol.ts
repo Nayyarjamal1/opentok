@@ -29,10 +29,10 @@ export class AnmolComponent implements OnInit {
     id: any;
     imageFlag = 0;
     callType: any;
+    connectionInfo: boolean = false;
 
     constructor(private base_path_service: GlobalService) {
     }
-
 
     ngOnInit() {
         $('#endBtn').hide();
@@ -56,11 +56,14 @@ export class AnmolComponent implements OnInit {
 
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
+        this.session.on("sessionConnected", (event) => {
+            this.connectionInfo = true;
+        })
+
         this.session.on('connectionCreated', (event) => {
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log("Hi i'm connected");
             }
-
         })
 
         this.session.on('signal:VIDEO', (event) => {
@@ -80,12 +83,26 @@ export class AnmolComponent implements OnInit {
             this.endCall();
         })
 
-        this.session.on('sessionDisconnected', (event) => {
-            this.session.disconnect()
+        this.session.on('signal:REJECT', (event) => {
+            console.log('call rejected')
+            this.rejectCall();
         })
 
+        // this.session.on('sessionDisconnected', (event) => {
+        //     this.session.disconnect()
+        // })
+
         this.session.on('connectionDestroyed', (event) => {
+            console.log('connection destroyed')
             this.session.disconnect()
+            if (this.publisher) {
+                this.session.unpublish(this.publisher);
+            }
+            this.publisher = null;
+            if (this.subscriber) {
+                this.session.unsubscribe(this.subscriber);
+            }
+            this.subscriber = null;
         })
 
         this.session.on('signal:receiver', (event) => {
@@ -117,19 +134,35 @@ export class AnmolComponent implements OnInit {
             this.session.subscribe(this.stream, div.id);
             this.subscriber = this.session.subscribe(this.stream, div.id, subOptions);
         } else if (this.callType == 'video') {
+            var subProp = {
+                resolution: '320x240'
+            }
             this.session.subscribe(this.stream, div.id);
-            this.subscriber = this.session.subscribe(this.stream, div.id);
+            this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
         }
     }
 
     acceptCall() {
+
+        this.session.signal({
+            type: 'ACCEPT'
+        }, function (error) {
+            if (error) {
+                console.log("signal error ("
+                    + error.name
+                    + "): " + error.message);
+            } else {
+                console.log("signal sent.");
+            }
+        });
+
         $('#endBtn').show();
         this.dialog = false;
         console.log(this.callType, "call type")
         if (!this.publisher) {
-            var publisherDiv = document.createElement('div');
-            publisherDiv.setAttribute('id', 'myPublisher');
-            document.body.appendChild(publisherDiv);
+            // var publisherDiv = document.createElement('div');
+            // publisherDiv.setAttribute('id', 'myPublisher');
+            // document.body.appendChild(publisherDiv);
             if (this.callType == 'audio') {
                 var pubOptions = {
                     width: 264,
@@ -138,14 +171,15 @@ export class AnmolComponent implements OnInit {
                     publishAudio: true,
                     publishVideo: false
                 };
-                this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
+                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
             } else if (this.callType == 'video') {
                 var publisherProps = {
                     width: 264,
                     height: 186,
+                    resolution: '320x240'
                 };
-                this.publisher = OT.initPublisher(this.apiKey, publisherDiv.id, publisherProps); // Pass the replacement div id and properties
+                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
             }
         }
@@ -161,10 +195,8 @@ export class AnmolComponent implements OnInit {
     }
 
     endCall() {
-
         $('#endBtn').hide();
         this.session.signal({
-            to: this.stream.connection,
             type: 'TERMINATED'
         }, function (error) {
             if (error) {
@@ -175,23 +207,26 @@ export class AnmolComponent implements OnInit {
                 console.log("signal sent.");
             }
         });
-        // this.session.disconnect();
-        // if (this.publisher) {
-        //     this.session.unpublish(this.publisher);
-        // }
-        // this.publisher = null;
-        // if (this.subscriber) {
-        //     this.session.unsubscribe(this.subscriber);
-        // }
-        // this.subscriber = null;
+        this.session.disconnect();
+        if (this.publisher) {
+            this.session.unpublish(this.publisher);
+        }
+        this.publisher = null;
+        if (this.subscriber) {
+            this.session.unsubscribe(this.subscriber);
+        }
+        this.subscriber = null;
+        $('#myPublisher').hide();
+        $('stream-' + this.stream.streamId).hide();
+        this.connectionInfo = false;
+        this.getSessionDetails();
     }
 
     rejectCall() {
 
         this.dialog = false;
         this.session.signal({
-            to: this.stream.connection,
-            type: 'TERMINATED'
+            type: 'REJECT'
         }, function (error) {
             if (error) {
                 console.log("signal error ("

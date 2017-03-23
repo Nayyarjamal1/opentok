@@ -140,6 +140,7 @@ export class DemoComponent implements OnInit {
                     var publisherProps = {
                         width: 264,
                         height: 186,
+                        resolution: '320x240'
                     };
                     this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
                     this.session.publish(this.publisher);
@@ -160,7 +161,20 @@ export class DemoComponent implements OnInit {
         })
 
         this.session.on('signal:ACCEPT', (event) => {
-            console.log('signal accepted')            
+            console.log('signal accepted')
+        })
+
+        this.session.on('signal:REJECT', (event) => {
+            console.log('reject call')
+            this.session.disconnect()
+            if (this.publisher) {
+                this.session.unpublish(this.publisher);
+            }
+            this.publisher = null;
+            if (this.subscriber) {
+                this.session.unsubscribe(this.subscriber);
+            }
+            this.subscriber = null;
         })
 
         this.session.on('connectionDestroyed', (event) => {
@@ -189,8 +203,11 @@ export class DemoComponent implements OnInit {
         div.setAttribute('id', 'stream-' + stream.streamId);
         document.body.appendChild(div);
         if (type == 'video') {
+            var subProp = {
+                resolution: '320x240'
+            }
             this.session.subscribe(stream, div.id);
-            this.subscriber = this.session.subscribe(stream, div.id);
+            this.subscriber = this.session.subscribe(stream, div.id, subProp);
         } else if (type == 'audio') {
             var subOptions = {
                 subscribeToAudio: true,

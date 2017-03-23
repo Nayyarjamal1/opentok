@@ -84,6 +84,11 @@ export class SumitComponent implements OnInit {
             this.endCall();
         })
 
+        this.session.on('signal:REJECT', (event) => {
+            console.log('call rejected')
+            this.rejectCall();
+        })
+
         // this.session.on('sessionDisconnected', (event) => {
         //     this.session.disconnect()
         // })
@@ -130,14 +135,17 @@ export class SumitComponent implements OnInit {
             this.session.subscribe(this.stream, div.id);
             this.subscriber = this.session.subscribe(this.stream, div.id, subOptions);
         } else if (this.callType == 'video') {
+            var subProp = {
+                resolution: '320x240'
+            }
             this.session.subscribe(this.stream, div.id);
-            this.subscriber = this.session.subscribe(this.stream, div.id);
+            this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
         }
     }
 
     acceptCall() {
-        
-        this.session.signal({            
+
+        this.session.signal({
             type: 'ACCEPT'
         }, function (error) {
             if (error) {
@@ -148,7 +156,7 @@ export class SumitComponent implements OnInit {
                 console.log("signal sent.");
             }
         });
-        
+
         $('#endBtn').show();
         this.dialog = false;
         console.log(this.callType, "call type")
@@ -170,6 +178,7 @@ export class SumitComponent implements OnInit {
                 var publisherProps = {
                     width: 264,
                     height: 186,
+                    resolution: '320x240'
                 };
                 this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
                 this.session.publish(this.publisher);
@@ -218,8 +227,7 @@ export class SumitComponent implements OnInit {
 
         this.dialog = false;
         this.session.signal({
-            to: this.stream.connection,
-            type: 'TERMINATED'
+            type: 'REJECT'
         }, function (error) {
             if (error) {
                 console.log("signal error ("
