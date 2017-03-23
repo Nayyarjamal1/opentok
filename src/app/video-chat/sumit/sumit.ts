@@ -246,6 +246,7 @@ export class SumitComponent implements OnInit {
             this.session.unsubscribe(this.subscriber);
         }
         this.subscriber = null;
+        this.getSessionDetails();
     }
 
     fileChangeEvent(fileInput: any) {

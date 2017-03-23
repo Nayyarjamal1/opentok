@@ -28,6 +28,7 @@ export class DemoComponent implements OnInit {
     imageName: any;
     imageFlag = 0;
     showfileSection: boolean = false;
+    connectionInfo:boolean=false;
     constructor(private base_path_service: GlobalService) {
     }
 
@@ -87,6 +88,11 @@ export class DemoComponent implements OnInit {
 
     initializeSession(type) {
         this.session = OT.initSession(this.apiKey, this.sessionId);
+
+        this.session.on("sessionConnected", (event) => {
+            this.connectionInfo = true;
+        })
+
         this.session.on('connectionCreated', (event) => {
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log('Another client connected.');
@@ -220,6 +226,7 @@ export class DemoComponent implements OnInit {
     }
 
     end() {
+        $('#endBtn').hide();
         this.session.disconnect();
         if (this.publisher) {
             this.session.unpublish(this.publisher);
@@ -229,6 +236,7 @@ export class DemoComponent implements OnInit {
             this.session.unsubscribe(this.subscriber);
         }
         this.subscriber = null;
+        this.connectionInfo = false;
     }
 
     endCall() {
@@ -253,6 +261,7 @@ export class DemoComponent implements OnInit {
             this.session.unsubscribe(this.subscriber);
         }
         this.subscriber = null;
+        this.connectionInfo = false;
     }
 
     sendFileSection(id) {
