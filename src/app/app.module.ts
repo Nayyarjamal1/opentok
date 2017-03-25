@@ -10,13 +10,18 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { AppComponent } from './app.component';
 import { GlobalService } from './GlobalService';
 
-import { DemoComponent }   from './video-chat/demo/demo';
+import { PatientComponent }   from './video-chat/patient/patient';
+import { DoctorComponent } from './video-chat/doctor/doctor'
+
 import { PublisherComponent } from './audio-chat/publisher/publisher'
 import { SumitComponent } from './video-chat/sumit/sumit'
 import { NayyarComponent } from './video-chat/nayyar/nayyar'
 import { AnmolComponent } from './video-chat/anmol/anmol'
 import { SenderComponent } from './text-chat/sender/sender'
 import { ReceiverComponent } from './text-chat/receiver/receiver'
+
+import { SenderDemoComponent } from './text-chat-demo/sender/sender'
+import { ReceiverDemoComponent } from './text-chat-demo/receiver/receiver'
 
 import { FileReceiverComponent } from './file-share/receiver/receiver'
 import { FileSenderComponent } from './file-share/sender/sender'
@@ -29,11 +34,17 @@ import { DialogModule, ButtonModule, InputTextModule} from 'primeng/primeng'
     AppComponent,
     SumitComponent,
     NayyarComponent,
-    DemoComponent,
+    
+    PatientComponent,
+    DoctorComponent,
+    
     AnmolComponent,
     PublisherComponent,
     SenderComponent,
     ReceiverComponent,
+    
+    SenderDemoComponent,
+    ReceiverDemoComponent,
     
     FileReceiverComponent,
     FileSenderComponent,

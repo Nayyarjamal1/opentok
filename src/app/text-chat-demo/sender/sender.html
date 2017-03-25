@@ -1,0 +1,27 @@
+<div class="ui-g" *ngFor="let user of userList">
+    <p style="padding:30px 30px 0; font-size:22px; text-transform:capitalize" *ngIf="id == user.id">heyyy {{user.name}}!! You're ready to chat</p>
+    <p style="padding:30px;" *ngIf="id == user.id">Now you can send messages to your friends!!</p>
+    <div *ngIf="id != user.id" class="ui-g-12" style="border: 2px solid #cccccc;margin:0 30px">
+        <div class="ui-g-6">
+            <span>{{user.name}}</span>
+        </div>
+        <div class="ui-g-6 text-right">
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Text Chat" type="button" (click)="makeConnection(user.id);showChatSection=true"></button>
+        </div>
+    </div>
+</div>
+<form [formGroup]="senderForm">
+    <div class="ui-g" style="padding:30px" *ngIf="showChatSection">
+        <p style="font-size:20px">Send message to {{connectionName}}</p>
+        <div class="ui-g-12">
+            <div id="history"></div>
+        </div>
+        <div class="ui-g-6">
+            <input pInputText type="text" formControlName="message" placeholder="Type Something" autocomplete="on">
+        </div>
+        <div class="ui-g-4">
+            <button [disabled]='!senderForm.valid' pButton label="Send" type="submit" 
+            style="background: #3ba75d; width: 26%; color:white; border:none" (click)="sendMessage(senderForm.value)"></button>
+        </div>
+    </div>
+</form>

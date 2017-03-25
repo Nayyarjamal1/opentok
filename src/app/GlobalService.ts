@@ -22,6 +22,7 @@ export class GlobalService {
     image_url: string;
     public playerId: any;
     public base_path: string;
+    public base_path_chat : string;
     public blog_url: string;
     public headers: Headers;
     public requestoptions: RequestOptions;
@@ -60,7 +61,8 @@ export class GlobalService {
 
     constructor(public http: Http, public router: Router) {
         // console.log(JSON.stringify(this.user_info) + " localStorage");
-        this.base_path = "https://chat.sia.co.in/";        
+        this.base_path = "https://chat.sia.co.in/";  
+        this.base_path_chat = 'ws://139.59.20.116:8080/';    
     }
 
     public base_path_api() {

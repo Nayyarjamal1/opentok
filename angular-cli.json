@@ -38,7 +38,8 @@
         "assets/js/nanoscroller.js",
         "assets/js/ripple.js",
         "assets/js/swipe.js",
-        "../node_modules/perfect-scrollbar/dist/js/perfect-scrollbar.min.js"
+        "../node_modules/perfect-scrollbar/dist/js/perfect-scrollbar.min.js",
+        "assets/js/reconnecting-websocket.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

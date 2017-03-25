@@ -6,11 +6,11 @@ declare var OT: any;
 
 
 @Component({
-    selector: 'app-demo',
-    templateUrl: './demo.html',
-    styleUrls: ['./demo.css']
+    selector: 'app-patient',
+    templateUrl: './patient.html',
+    styleUrls: ['./patient.css']
 })
-export class DemoComponent implements OnInit {
+export class PatientComponent implements OnInit {
 
     apiKey: any;
     sessionId: any;
@@ -28,7 +28,9 @@ export class DemoComponent implements OnInit {
     imageName: any;
     imageFlag = 0;
     showfileSection: boolean = false;
-    connectionInfo:boolean=false;
+    connectionInfo: boolean = false;
+    connectionID: any;
+
     constructor(private base_path_service: GlobalService) {
     }
 
@@ -87,6 +89,7 @@ export class DemoComponent implements OnInit {
     }
 
     initializeSession(type) {
+
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
         this.session.on("sessionConnected", (event) => {
@@ -95,9 +98,9 @@ export class DemoComponent implements OnInit {
         })
 
         this.session.on('connectionCreated', (event) => {
+            this.connectionID = event.connection.connectionId;
             if (event.connection.connectionId != this.session.connection.connectionId) {
                 console.log('Another client connected.');
-
                 if (type == 'video') {
                     this.session.signal({
                         type: 'VIDEO'
@@ -130,28 +133,26 @@ export class DemoComponent implements OnInit {
             console.log(event, "stream")
             $('#endBtn').show();
             if (!this.publisher) {
-                // var publisherDiv = document.createElement('div');
-                // publisherDiv.setAttribute('id', 'myPublisher');
-                // document.body.appendChild(publisherDiv);
+                var pubOptions;
                 if (type == 'audio') {
-                    var pubOptions = {
+                    pubOptions = {
                         width: 264,
                         height: 186,
                         videoSource: null,
                         publishAudio: true,
                         publishVideo: false
                     };
-                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
-                    this.session.publish(this.publisher);
                 } else if (type == 'video') {
-                    var publisherProps = {
+                    pubOptions = {
                         width: 264,
                         height: 186,
-                        resolution: '320x240'
-                    };
-                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
-                    this.session.publish(this.publisher);
+                        resolution: '320x240',
+                        frameRate: 15
+                    };                    
                 }
+
+                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
+                this.session.publish(this.publisher);
 
             }
             for (let i = 0; i < event.streams.length; i++) {
@@ -167,7 +168,8 @@ export class DemoComponent implements OnInit {
             this.end();
         })
 
-        this.session.on('signal:ACCEPT', (event) => {            
+        this.session.on('signal:ACCEPT', (event) => {
+            console.log(this.connectionID, "*****" + event.data, 'if notMatched')
             console.log(event.data, 'signal accepted')
         })
 
@@ -177,12 +179,14 @@ export class DemoComponent implements OnInit {
             this.session.disconnect()
             if (this.publisher) {
                 this.session.unpublish(this.publisher);
+                this.publisher = null;
             }
-            this.publisher = null;
+
             if (this.subscriber) {
                 this.session.unsubscribe(this.subscriber);
+                this.subscriber = null;
             }
-            this.subscriber = null;
+
             this.connectionInfo = false;
         })
 
@@ -199,33 +203,34 @@ export class DemoComponent implements OnInit {
             this.subscriber = null;
         })
 
-        this.session.connect(this.token, (error) => {
-            console.log(error, "connection error")
-        })
+        this.session.connect(this.token)
     }
 
     subscribeToStream(stream, type) {
         console.log(stream, 'helloo')
         this.stream = stream;
         var div = document.createElement('div');
+        // var div = document.getElementById('mySubscriber');
         div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
         div.setAttribute('id', 'stream-' + stream.streamId);
         document.body.appendChild(div);
+
+        var subProp;
         if (type == 'video') {
-            var subProp = {
-                resolution: '320x240'
+            subProp = {
+                resolution: '320x240',
+                frameRate: 15
             }
-            this.session.subscribe(stream, div.id);
-            this.subscriber = this.session.subscribe(stream, div.id, subProp);
         } else if (type == 'audio') {
-            var subOptions = {
+            subProp = {
                 subscribeToAudio: true,
                 subscribeToVideo: false,
                 videoSource: null
             };
-            this.session.subscribe(stream, div.id);
-            this.subscriber = this.session.subscribe(stream, div.id, subOptions);
         }
+
+        this.session.subscribe(stream, div.id);
+        this.subscriber = this.session.subscribe(stream, div.id, subProp);
     }
 
     end() {

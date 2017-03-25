@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router'
 import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
@@ -6,11 +7,11 @@ declare var OT: any;
 
 
 @Component({
-    selector: 'app-sumit',
-    templateUrl: './sumit.html',
-    styleUrls: ['./sumit.css']
+    selector: 'app-doctor',
+    templateUrl: './doctor.html',
+    styleUrls: ['./doctor.css']
 })
-export class SumitComponent implements OnInit {
+export class DoctorComponent implements OnInit {
 
     apiKey: any;
     sessionId: any;
@@ -31,19 +32,24 @@ export class SumitComponent implements OnInit {
     imageFlag = 0;
     callType: any;
     connectionInfo: boolean = false;
-    connectionID:any;
+    connectionID: any;
 
-    constructor(private base_path_service: GlobalService) {
+    constructor(private base_path_service: GlobalService, private route: ActivatedRoute,
+        private router: Router) {
     }
 
     ngOnInit() {
+        this.route.params.subscribe(param => {
+            console.log(param)
+            this.id = param['id'];
+        })
         $('#endBtn').hide();
         $('#startBtn').hide();
         this.getSessionDetails();
     }
 
     getSessionDetails() {
-        var url = 'https://chat.sia.co.in/session/?id=1';
+        var url = 'https://chat.sia.co.in/session/?id='+this.id;
         this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
@@ -55,7 +61,7 @@ export class SumitComponent implements OnInit {
     }
 
     initializeSession() {
-
+        
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
         this.session.on("sessionConnected", (event) => {
@@ -81,11 +87,30 @@ export class SumitComponent implements OnInit {
             this.dialog = true;
         })
         
-        this.session.on('signal:ACCEPT', (event) => {  
-            // console.log(this.connectionID, "*****" +event.data, 'if notMatched')                   
-           if(this.connectionID == event.data){
-              console.log(event.data, 'notMatched')   
-           }
+        this.session.on('signal:BUSY', (event) => { 
+            this.dialog = false;
+             console.log('busy')
+        });
+
+
+        this.session.on('signal:ACCEPT', (event) => {
+            console.log(this.connectionID, "*****" + event.data, 'if notMatched')
+            if (this.connectionID == event.data) {
+                this.dialog = false;
+                console.log(this.connectionID, event.data, 'notMatched')
+            }else {
+                this.session.signal({
+                    type: 'BUSY'
+                }, function (error) {
+                    if (error) {
+                        console.log("signal error ("
+                            + error.name
+                            + "): " + error.message);
+                    } else {
+                        console.log("signal sent.");
+                    }
+                });
+            }
         })
 
         this.session.on('signal:TERMINATED', (event) => {
@@ -97,10 +122,6 @@ export class SumitComponent implements OnInit {
             console.log('call rejected')
             this.rejectCall();
         })
-
-        // this.session.on('sessionDisconnected', (event) => {
-        //     this.session.disconnect()
-        // })
 
         this.session.on('connectionDestroyed', (event) => {
             console.log('connection destroyed')
@@ -132,30 +153,34 @@ export class SumitComponent implements OnInit {
         this.stream = stream;
         console.log(this.stream, 'helloo')
         var div = document.createElement('div');
+        // var div document.getElementById('mySubscriber');
         div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
+        
+        var subProp;
         if (this.callType == 'audio') {
-            var subOptions = {
+            subProp = {
                 subscribeToAudio: true,
                 subscribeToVideo: false,
                 videoSource: null
-            };
-            this.session.subscribe(this.stream, div.id);
-            this.subscriber = this.session.subscribe(this.stream, div.id, subOptions);
+            };            
         } else if (this.callType == 'video') {
-            var subProp = {
-                resolution: '320x240'
-            }
-            this.session.subscribe(this.stream, div.id);
-            this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
+            subProp = {
+                resolution: '320x240',
+                frameRate: 15
+            }            
         }
+        
+        this.session.subscribe(this.stream, div.id);
+        this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
     }
 
     acceptCall() {
 
         this.session.signal({
             type: 'ACCEPT',
+            retryAfterReconnect: true,
             data: this.connectionID
         }, function (error) {
             if (error) {
@@ -170,29 +195,27 @@ export class SumitComponent implements OnInit {
         $('#endBtn').show();
         this.dialog = false;
         console.log(this.callType, "call type")
-        if (!this.publisher) {
-            // var publisherDiv = document.createElement('div');
-            // publisherDiv.setAttribute('id', 'myPublisher');
-            // document.body.appendChild(publisherDiv);
+        if (!this.publisher) {     
+            var pubOptions;       
             if (this.callType == 'audio') {
-                var pubOptions = {
+                pubOptions = {
                     width: 264,
                     height: 186,
                     videoSource: null,
                     publishAudio: true,
                     publishVideo: false
-                };
-                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
-                this.session.publish(this.publisher);
+                };                
             } else if (this.callType == 'video') {
-                var publisherProps = {
+                 pubOptions = {
                     width: 264,
                     height: 186,
-                    resolution: '320x240'
-                };
-                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', publisherProps); // Pass the replacement div id and properties
-                this.session.publish(this.publisher);
+                    resolution: '320x240',
+                    frameRate: 15
+                };                
             }
+            
+            this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
+            this.session.publish(this.publisher);
         }
 
         this.session.on('streamCreated', (event) => {
@@ -208,7 +231,7 @@ export class SumitComponent implements OnInit {
     endCall() {
         $('#endBtn').hide();
         this.dialog = false;
-        
+
         this.session.signal({
             type: 'TERMINATED'
         }, function (error) {
@@ -223,12 +246,14 @@ export class SumitComponent implements OnInit {
         this.session.disconnect();
         if (this.publisher) {
             this.session.unpublish(this.publisher);
+            this.publisher = null;
         }
-        this.publisher = null;
+        
         if (this.subscriber) {
             this.session.unsubscribe(this.subscriber);
+            this.subscriber = null;
         }
-        this.subscriber = null;
+        
         $('#myPublisher').hide();
         // $('stream-' + this.stream.streamId).hide();
         this.connectionInfo = false;
