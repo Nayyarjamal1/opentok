@@ -4,9 +4,9 @@ import { Routes, RouterModule, PreloadAllModules } from '@angular/router';
 import { PatientComponent }   from './video-chat/patient/patient';
 import { DoctorComponent } from './video-chat/doctor/doctor'
 
-import { SumitComponent } from './video-chat/sumit/sumit'
-import { NayyarComponent } from './video-chat/nayyar/nayyar'
-import { AnmolComponent } from './video-chat/anmol/anmol'
+// import { SumitComponent } from './video-chat/sumit/sumit'
+// import { NayyarComponent } from './video-chat/nayyar/nayyar'
+// import { AnmolComponent } from './video-chat/anmol/anmol'
 import { PublisherComponent } from './audio-chat/publisher/publisher'
 import { SenderComponent } from './text-chat/sender/sender'
 import { ReceiverComponent } from './text-chat/receiver/receiver'
@@ -21,12 +21,12 @@ const initialRoute = () => {
 };
 
 const appRoutes: Routes = [
-  { path: '', redirectTo: '/patient', pathMatch: 'full' }, 
+  { path: '', redirectTo: '/text-sender/1', pathMatch: 'full' }, 
   { path: 'patient', component: PatientComponent },
   { path: 'doctor/:id', component: DoctorComponent },
-  { path: 'sumit', component: SumitComponent },
-  { path: 'nayyar', component: NayyarComponent },
-  { path: 'anmol', component: AnmolComponent },
+  // { path: 'sumit', component: SumitComponent },
+  // { path: 'nayyar', component: NayyarComponent },
+  // { path: 'anmol', component: AnmolComponent },
   { path: 'publisher', component: PublisherComponent },
   { path: 'sender', component: SenderComponent },
   { path: 'receiver', component: ReceiverComponent },

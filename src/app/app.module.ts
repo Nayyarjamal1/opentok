@@ -14,9 +14,9 @@ import { PatientComponent }   from './video-chat/patient/patient';
 import { DoctorComponent } from './video-chat/doctor/doctor'
 
 import { PublisherComponent } from './audio-chat/publisher/publisher'
-import { SumitComponent } from './video-chat/sumit/sumit'
-import { NayyarComponent } from './video-chat/nayyar/nayyar'
-import { AnmolComponent } from './video-chat/anmol/anmol'
+// import { SumitComponent } from './video-chat/sumit/sumit'
+// import { NayyarComponent } from './video-chat/nayyar/nayyar'
+// import { AnmolComponent } from './video-chat/anmol/anmol'
 import { SenderComponent } from './text-chat/sender/sender'
 import { ReceiverComponent } from './text-chat/receiver/receiver'
 
@@ -32,13 +32,13 @@ import { DialogModule, ButtonModule, InputTextModule} from 'primeng/primeng'
 @NgModule({
   declarations: [
     AppComponent,
-    SumitComponent,
-    NayyarComponent,
+    // SumitComponent,
+    // NayyarComponent,
     
     PatientComponent,
     DoctorComponent,
     
-    AnmolComponent,
+    // AnmolComponent,
     PublisherComponent,
     SenderComponent,
     ReceiverComponent,
