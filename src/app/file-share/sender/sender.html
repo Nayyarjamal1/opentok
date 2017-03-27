@@ -1,10 +1,10 @@
 <div class="ui-g" style="padding:30px">
-    <div class="ui-g-12" style="border: 2px solid #cccccc;">
+    <div class="ui-g-12" style="border: 2px solid #cccccc;" *ngFor="let user of userList">
         <div class="ui-g-6">
-            <span>Subscriber</span>
+            <span>{{user.name}}</span>
         </div>
         <div class="ui-g-6 text-right">
-            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send File" type="button" (click)="sendFileSection(3);"></button>
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send File" type="button" (click)="sendFileSection(user.id);"></button>
         </div>
     </div>
 </div>

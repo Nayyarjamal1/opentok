@@ -2,7 +2,7 @@
     <p style="padding:30px 30px 0; font-size:22px; text-transform:capitalize" *ngIf="id == user.id">heyyy {{user.name}}!! You are online</p>
 </div>
 
-<div class="ui-g" style="padding:30px;">
+<div class="ui-g" style="padding:30px;" *ngIf="chatDiv">
     <div class="ui-g-12" style="border: 2px solid #cccccc;">
         <div class="ui-g-6">
             <p *ngFor="let user of userList">
@@ -31,4 +31,15 @@
         <span *ngIf="imageFlag==1" class="no_file_chosen">{{imageName}}</span>
         <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send" type="button" (click)="sendFile(message)"></button>
     </div>
+</div>
+
+<p *ngIf="connectionInfo" style="font-size:24px; text-align:center">You are connected</p>
+<p-dialog header="Wikipedia on MySwaasth.com" width="700" height="500" [(visible)]="dialog" modal="modal" showEffect="fade">
+    <button style="background: #3ba75d; width: 26%; color:white" pButton label="accept" type="button" (click)="acceptCall()"></button>
+    <button style="background: red; width: 26%;color:white" pButton label="reject" type="button" (click)="rejectCall()"></button>
+</p-dialog>
+<div *ngIf="audioVideoChat">
+    <div id="myPublisher" style="width: 264;height: 186;"></div>
+    <!--<div id="mySubscriber" style="width: 264;height: 186; margin-top: 30px;"></div>-->
+    <button id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button" (click)="endCall()"></button>
 </div>

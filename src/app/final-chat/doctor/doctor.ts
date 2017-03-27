@@ -1,9 +1,11 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms'
 import { Router, ActivatedRoute } from '@angular/router'
 import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
 declare var OT: any;
+declare var ReconnectingWebSocket: any;
 
 
 @Component({
@@ -11,8 +13,17 @@ declare var OT: any;
     templateUrl: './doctor.html',
     styleUrls: ['./doctor.css']
 })
-export class DoctorComponent implements OnInit {
+export class FinalDoctorComponent implements OnInit {
 
+    message: any;    
+    userList: any;
+    socket: any;
+    msg: any;
+    receiverForm: FormGroup;
+   
+    showfileSection: boolean = false;
+    
+    
     apiKey: any;
     sessionId: any;
     token: any;
@@ -33,9 +44,12 @@ export class DoctorComponent implements OnInit {
     callType: any;
     connectionInfo: boolean = false;
     connectionID: any;
+    
+    audioVideoChat = false;
+    chatDiv=true;
 
     constructor(private base_path_service: GlobalService, private route: ActivatedRoute,
-        private router: Router) {
+        private router: Router, private fb: FormBuilder) {
     }
 
     ngOnInit() {
@@ -43,13 +57,18 @@ export class DoctorComponent implements OnInit {
             console.log(param)
             this.id = param['id'];
         })
-        $('#endBtn').hide();
-        $('#startBtn').hide();
+
+        this.receiverForm = this.fb.group({
+            'message': ['', [Validators.required]]
+        })
+
+        this.getUserList();
+        this.getUserInfo();
         this.getSessionDetails();
     }
 
     getSessionDetails() {
-        var url = this.base_path_service.base_path+'session/?id='+this.id;
+        var url = this.base_path_service.base_path + 'session/?id=' + this.id;
         this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
@@ -61,7 +80,7 @@ export class DoctorComponent implements OnInit {
     }
 
     initializeSession() {
-        
+
         this.session = OT.initSession(this.apiKey, this.sessionId);
 
         this.session.on("sessionConnected", (event) => {
@@ -86,10 +105,10 @@ export class DoctorComponent implements OnInit {
             this.callType = 'audio';
             this.dialog = true;
         })
-        
-        this.session.on('signal:BUSY', (event) => { 
+
+        this.session.on('signal:BUSY', (event) => {
             this.dialog = false;
-             console.log('busy')
+            console.log('busy')
         });
 
 
@@ -98,7 +117,7 @@ export class DoctorComponent implements OnInit {
             if (this.connectionID == event.data) {
                 this.dialog = false;
                 console.log(this.connectionID, event.data, 'notMatched')
-            }else {
+            } else {
                 this.session.signal({
                     type: 'BUSY'
                 }, function (error) {
@@ -157,21 +176,21 @@ export class DoctorComponent implements OnInit {
         div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
         div.setAttribute('id', 'stream-' + this.stream.streamId);
         document.body.appendChild(div);
-        
+
         var subProp;
         if (this.callType == 'audio') {
             subProp = {
                 subscribeToAudio: true,
                 subscribeToVideo: false,
                 videoSource: null
-            };            
+            };
         } else if (this.callType == 'video') {
             subProp = {
                 resolution: '320x240',
                 frameRate: 15
-            }            
+            }
         }
-        
+
         this.session.subscribe(this.stream, div.id);
         this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
     }
@@ -194,9 +213,11 @@ export class DoctorComponent implements OnInit {
 
         $('#endBtn').show();
         this.dialog = false;
+        this.audioVideoChat = true;
+        this.chatDiv=false;
         console.log(this.callType, "call type")
-        if (!this.publisher) {     
-            var pubOptions;       
+        if (!this.publisher) {
+            var pubOptions;
             if (this.callType == 'audio') {
                 pubOptions = {
                     width: 264,
@@ -204,16 +225,16 @@ export class DoctorComponent implements OnInit {
                     videoSource: null,
                     publishAudio: true,
                     publishVideo: false
-                };                
+                };
             } else if (this.callType == 'video') {
-                 pubOptions = {
+                pubOptions = {
                     width: 264,
                     height: 186,
                     resolution: '320x240',
                     frameRate: 15
-                };                
+                };
             }
-            
+
             this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
             this.session.publish(this.publisher);
         }
@@ -229,6 +250,8 @@ export class DoctorComponent implements OnInit {
     }
 
     endCall() {
+        this.chatDiv = true;
+        this.connectionInfo = false;
         $('#endBtn').hide();
         this.dialog = false;
 
@@ -248,12 +271,12 @@ export class DoctorComponent implements OnInit {
             this.session.unpublish(this.publisher);
             this.publisher = null;
         }
-        
+
         if (this.subscriber) {
             this.session.unsubscribe(this.subscriber);
             this.subscriber = null;
         }
-        
+
         $('#myPublisher').hide();
         // $('stream-' + this.stream.streamId).hide();
         this.connectionInfo = false;
@@ -287,6 +310,69 @@ export class DoctorComponent implements OnInit {
         this.getSessionDetails();
     }
 
+    getUserList() {
+        var url = this.base_path_service.base_path + 'doc/';
+        this.base_path_service.GetRequest(url)
+            .subscribe(res => {
+                console.log(res[0].json, "resssssss");
+                this.userList = res[0].json;
+            })
+    }
+
+    getUserInfo() {
+
+        var url = this.base_path_service.base_path_chat + '1/' + this.id + '/';
+        this.socket = new ReconnectingWebSocket(url);
+        this.socket.onmessage = (message) => {
+            console.log("response after 1: ", JSON.parse(message.data))
+            this.msg = message;
+            if (JSON.parse(message.data).person == this.id) {
+                console.log('HEYY connected')
+                var group = JSON.parse(this.msg.data).group_name;
+                var url = this.base_path_service.base_path_chat + '3/' + group + '/' + this.id;
+                this.socket = new ReconnectingWebSocket(url);
+                this.socket.onmessage = (message) => {
+                    var mymsg;
+                    console.log("message after 3: ", message.data)
+                    if (JSON.parse(message.data).is_file) {
+                        mymsg = document.createElement('img');
+                        mymsg.setAttribute('style', 'width: 210px; height: 180px');
+                        mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
+                        var msgHistory = document.getElementById('history')
+                        msgHistory.appendChild(mymsg);
+                        mymsg.scrollIntoView();
+                    } else {
+                        if (JSON.parse(message.data).job_name) {
+                            mymsg = document.createElement('p');
+                            for (let i = 0; i < this.userList.length; i++) {
+                                if (this.userList[i].id == JSON.parse(message.data).u_id) {
+                                    mymsg.innerHTML = this.userList[i].name + ':     ' + JSON.parse(message.data).job_name;
+                                }
+                            }
+                            var msgHistory = document.getElementById('history')
+                            msgHistory.appendChild(mymsg);
+                            mymsg.scrollIntoView();
+                        }
+                    };
+                }
+            }
+        };
+    }
+
+    sendMessage(value) {
+
+        var data_to_be_send = {
+
+            job_name: value.message,
+            id: this.id,
+            group: JSON.parse(this.msg.data).group_name
+        }
+
+        this.socket.send(JSON.stringify(data_to_be_send));
+
+        this.receiverForm.reset();
+    }
+
     fileChangeEvent(fileInput: any) {
 
         this.image = fileInput.target.files[0];
@@ -309,7 +395,6 @@ export class DoctorComponent implements OnInit {
     }
 
     sendFile() {
-
         this.imageFlag = 0;
 
         var url = this.base_path_service.base_path + 'upload/';
@@ -317,32 +402,26 @@ export class DoctorComponent implements OnInit {
             var formData: any = new FormData();
             var xhr = new XMLHttpRequest();
 
-            formData.append("id", 2);
+            formData.append("id", this.id);
             formData.append("file", this.image);
+            formData.append("group", JSON.parse(this.msg.data).group_name);
 
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
-
                     console.log(JSON.parse(xhr.response).file, 'success')
 
-                    var mymsg = document.createElement('img');
-                    mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
-                    var msgHistory = document.getElementById('history')
-                    msgHistory.appendChild(mymsg);
-                    mymsg.scrollIntoView();
-
-                    this.session.signal({
-                        type: 'sender',
-                        data: this.base_path_service.base_path + JSON.parse(xhr.response).file
-                    }, function (error) {
-                        if (!error) {
-                            console.log('error')
-                        }
-                    });
+                    // var mymsg = document.createElement('img');
+                    // mymsg.setAttribute('style', 'width: 200px; height: 180px');
+                    // mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
+                    // var msgHistory = document.getElementById('history')
+                    // msgHistory.appendChild(mymsg);
+                    // mymsg.scrollIntoView();
                 }
             }
             xhr.open("POST", url, true);
             xhr.send(formData);
         });
+
     }
+
 }

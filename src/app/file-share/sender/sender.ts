@@ -23,11 +23,22 @@ export class FileSenderComponent implements OnInit {
     id: any;
     imageFlag = 0;
     showfileSection: boolean = false;
+    userList:any;
 
     constructor(private base_path_service: GlobalService) {
     }
 
     ngOnInit() {
+        this.getUserList();
+    }
+
+    getUserList() {
+        var url = this.base_path_service.base_path + 'doc/';
+        this.base_path_service.GetRequest(url)
+            .subscribe(res => {
+                console.log(res[0].json, "resssssss");
+                this.userList = res[0].json;                
+            })
     }
 
     fileChangeEvent(fileInput: any) {

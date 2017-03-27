@@ -1,0 +1,58 @@
+<div style="padding-top:30px" *ngIf="!showChatSection">
+    <div class="ui-g" *ngFor="let user of userList">
+        <div *ngIf="id != user.id" class="ui-g-12" style="border: 2px solid #cccccc;margin:0 30px">
+            <div class="ui-g-6">
+                <span>{{user.name}}</span>
+            </div>
+            <div class="ui-g-6 text-right">
+                <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Chat" type="button" (click)="makeConnection(user.id); showChatSection=true;chatDiv=true; name=user.name; docID=user.id"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ui-g" style="padding:30px;" *ngIf="chatDiv">
+    <div class="ui-g-12">
+        <span (click)="showChatSection=!showChatSection;chatDiv=!chatDiv" style="cursor:pointer">Back</span>
+    </div>
+    <div class="ui-g-12" style="border: 2px solid #cccccc;">
+        <div class="ui-g-6">
+            <span>{{name}}</span>
+        </div>
+        <div class="ui-g-6 text-right">
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Audio" type="button" (click)="getSessionDetails(docID, 'audio');audioVideoChat=true;chatDiv=false"></button>
+            <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Video" type="button" (click)="getSessionDetails(docID, 'video');audioVideoChat=true;chatDiv=false"></button>
+        </div>
+    </div>
+    <div class="ui-g-12" style="border: 2px solid #cccccc;height: 300px;overflow-y: auto;">
+        <div id="history"></div>
+    </div>
+    <div class="ui-g-12" style="border: 2px solid #cccccc;padding: 0;">
+        <form [formGroup]="senderForm">
+            <div class="ui-g-10">
+                <input pInputText type="text" formControlName="message" placeholder="Type Something" autocomplete="on">
+            </div>
+            <div class="ui-g-2">
+                <button [disabled]='!senderForm.valid' style="background: #3ba75d; color:white; border:none" pButton label="Send" type="submit"
+                    (click)="sendMessage(senderForm.value)"></button>
+            </div>
+        </form>
+    </div>
+    <div class="ui-g-12">        
+        <input type="file" style="color: transparent; width: 100px;" (change)="fileChangeEvent($event)" fileChangeEvent name="photo"
+            id="upload-photo" />
+        <span *ngIf="imageFlag==0" class="no_file_chosen">No file chosen</span>
+        <span *ngIf="imageFlag==1" class="no_file_chosen">{{imageName}}</span>
+        <button style="background: #3ba75d; width: 26%; color:white; border:none" pButton label="Send" type="button" (click)="sendFile(message)"></button>
+    </div>
+</div>
+
+<div *ngIf="audioVideoChat">
+    <div class="ui-g-12">
+        <span (click)="audioVideoChat=!audioVideoChat;chatDiv=!chatDiv" style="cursor:pointer">Back</span>
+    </div>
+    <p *ngIf="connectionInfo" style="font-size:24px; text-align:center">You are connected</p>
+    <div id="myPublisher" style="width: 264;height: 186;"></div>
+    <button *ngIf="connectionInfo" id="endBtn" style="background: #3ba75d; width: 13%;" pButton label="End Call" type="button"
+        (click)="endCall();showChatSection=!showChatSection"></button>
+</div>

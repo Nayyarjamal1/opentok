@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit} from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router'
 import { GlobalService } from '../../GlobalService';
 
 declare var $: any;
@@ -23,10 +24,17 @@ export class FileReceiverComponent implements OnInit {
     id: any;
     imageFlag = 0;
 
-    constructor(private base_path_service: GlobalService) {
+    constructor(private base_path_service: GlobalService, private route: ActivatedRoute,
+        private router: Router) {
     }
 
     ngOnInit() {
+
+        this.route.params.subscribe(param => {
+            console.log(param)
+            this.id = param['id'];
+        })
+        
         this.textChat();
     }
 
@@ -53,7 +61,7 @@ export class FileReceiverComponent implements OnInit {
 
     textChat() {
         this.id = 3;
-        var url = this.base_path_service.base_path + 'session/?id=3';
+        var url = this.base_path_service.base_path + 'session/?id='+this.id;
         this.base_path_service.GetRequest(url)
             .subscribe(res => {
                 this.apiKey = res[0].json.apiKey;
@@ -103,15 +111,15 @@ export class FileReceiverComponent implements OnInit {
 
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
-                    
-                    console.log(JSON.parse(xhr.response).file, 'success')                    
-                    
+
+                    console.log(JSON.parse(xhr.response).file, 'success')
+
                     var mymsg = document.createElement('img');
                     mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
                     var msgHistory = document.getElementById('history')
                     msgHistory.appendChild(mymsg);
                     mymsg.scrollIntoView();
-                    
+
                     this.session.signal({
                         type: 'sender',
                         data: this.base_path_service.base_path + JSON.parse(xhr.response).file

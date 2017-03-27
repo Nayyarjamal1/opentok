@@ -61,8 +61,9 @@ export class GlobalService {
 
     constructor(public http: Http, public router: Router) {
         // console.log(JSON.stringify(this.user_info) + " localStorage");
-        this.base_path = "https://chat.sia.co.in/";  
-        this.base_path_chat = 'ws://139.59.20.116:8080/';    
+        this.base_path = "https://doccall.sia.co.in/";
+        this.base_path_chat = 'wss://doccall.sia.co.in/ws/'  
+        // this.base_path_chat = 'ws://139.59.20.116:8080/';    
     }
 
     public base_path_api() {
