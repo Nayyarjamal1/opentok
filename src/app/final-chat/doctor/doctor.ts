@@ -362,10 +362,19 @@ export class FinalDoctorComponent implements OnInit {
                                 for (let j = 0; j < this.userList.length; j++) {
                                     if (this.userList[j].id == res[0].json.data[i].u_id) {
                                         if (res[0].json.data[i].is_file) {
-                                            mymsg = document.createElement('img');
+                                            console.log(res[0].json.data[i].file.split('.').pop(), "file extension")
+                                            var name = document.createElement('p');
+                                            name.innerHTML = this.userList[j].name + ':    '
+                                            if (res[0].json.data[i].file.split('.').pop() == 'png' || res[0].json.data[i].file.split('.').pop() == 'jpg' ||
+                                            res[0].json.data[i].file.split('.').pop() == 'jpeg') {
+                                                mymsg = document.createElement('img');
+                                            } else {
+                                                mymsg = document.createElement('embed');
+                                            }
                                             mymsg.setAttribute('style', 'width: 210px; height: 180px');
                                             mymsg.setAttribute('src', this.base_path_service.base_path + res[0].json.data[i].file);
                                             var msgHistory = document.getElementById('history')
+                                            msgHistory.appendChild(name);
                                             msgHistory.appendChild(mymsg);
                                             mymsg.scrollIntoView();
                                         } else {

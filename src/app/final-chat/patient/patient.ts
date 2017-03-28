@@ -315,44 +315,6 @@ export class FinalPatientComponent implements OnInit {
         }
     }
 
-    // sendFileSection(id) {
-    //     this.id = id;
-    //     var url = this.base_path_service.base_path + 'session/?id='+id;
-    //     this.base_path_service.GetRequest(url)
-    //         .subscribe(res => {
-    //             this.apiKey = res[0].json.apiKey;
-    //             this.sessionId = res[0].json.sessionId;
-    //             this.token = res[0].json.token;
-
-    //             this.session = OT.initSession(this.apiKey, this.sessionId);
-
-    //             this.session.on('sessionConnected', (event) => {
-    //                 console.log("I'm connected")
-    //                 this.showfileSection = true;
-    //             })
-
-    //             this.session.on('signal:sender', (event) => {
-    //                 console.log(event, "gsffee")
-    //                 // var msg = document.createElement('p');
-    //                 // msg.innerHTML = event.data;
-    //                 var msg = document.createElement('img');
-    //                 msg.setAttribute('src', event.data);
-    //                 msg.className = event.from.connectionId === this.session.connection.connectionId ? 'mine' : 'theirs';
-    //                 var msgHistory = document.getElementById('history')
-    //                 msgHistory.appendChild(msg);
-    //                 msg.scrollIntoView();
-    //             });
-
-    //             this.session.on("signal", (event) => {
-    //                 console.log(event, "Signal sent from connection ");
-    //             });
-
-    //             this.session.connect(this.token, (error) => {
-    //                 console.log(error, "connection error")
-    //             })
-    //         })
-    // }
-
     sendFile() {
         this.imageFlag = 0;
 
@@ -368,13 +330,6 @@ export class FinalPatientComponent implements OnInit {
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
                     console.log(JSON.parse(xhr.response).file, 'success')
-
-                    // var mymsg = document.createElement('img');
-                    // mymsg.setAttribute('style', 'width: 200px; height: 180px');
-                    // mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(xhr.response).file);
-                    // var msgHistory = document.getElementById('history')
-                    // msgHistory.appendChild(mymsg);
-                    // mymsg.scrollIntoView();
                 }
             }
             xhr.open("POST", url, true);
@@ -404,10 +359,18 @@ export class FinalPatientComponent implements OnInit {
                         for (let j = 0; j < this.userList.length; j++) {
                             if (this.userList[j].id == res[0].json.data[i].u_id) {
                                 if (res[0].json.data[i].is_file) {
-                                    mymsg = document.createElement('img');
+                                    var name = document.createElement('p');
+                                    name.innerHTML = this.userList[j].name + ':    '
+                                    if (res[0].json.data[i].file.split('.').pop() == 'png' || res[0].json.data[i].file.split('.').pop() == 'jpg' ||
+                                        res[0].json.data[i].file.split('.').pop() == 'jpeg' || res[0].json.data[i].file.split('.').pop() == 'svg') {
+                                        mymsg = document.createElement('img');
+                                    } else {
+                                        mymsg = document.createElement('embed');
+                                    }
                                     mymsg.setAttribute('style', 'width: 210px; height: 180px');
                                     mymsg.setAttribute('src', this.base_path_service.base_path + res[0].json.data[i].file);
                                     var msgHistory = document.getElementById('history')
+                                    msgHistory.appendChild(name);
                                     msgHistory.appendChild(mymsg);
                                     mymsg.scrollIntoView();
                                 } else {
@@ -417,48 +380,12 @@ export class FinalPatientComponent implements OnInit {
                                     msgHistory.appendChild(mymsg);
                                     mymsg.scrollIntoView();
                                 }
+                            } else {
+                                
                             }
                         }
                     }
                 })
-            // if (JSON.parse(message.data).is_file) {
-            //     mymsg = document.createElement('img');
-            //     mymsg.setAttribute('style', 'width: 200px; height: 180px');
-            //     mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
-            //     var msgHistory = document.getElementById('history')
-            //     msgHistory.appendChild(mymsg);
-            //     mymsg.scrollIntoView();
-            // } else {
-            //     var url = this.base_path_service.base_path + 'getHistory/?group=' + JSON.parse(this.msg.data).group_name + '&page=1';
-            //     this.base_path_service.GetRequest(url)
-            //         .subscribe(res => {
-            //             console.log(res[0].json, "history");   
-            //             document.getElementById('history').innerHTML = '';                       
-            //             for (let i = 0; i < res[0].json.data.length; i++) {
-            //                 for (let j = 0; j < this.userList.length; j++) {
-            //                     if (this.userList[j].id == res[0].json.data[i].u_id) {
-            //                         mymsg = document.createElement('p');                                                                      
-            //                         mymsg.innerHTML = this.userList[j].name + ':    ' + res[0].json.data[i].job_name;
-            //                         var msgHistory = document.getElementById('history')
-            //                         msgHistory.appendChild(mymsg);
-            //                         mymsg.scrollIntoView();
-            //                     }
-            //                 }
-            //             }
-            //         })
-            // if (JSON.parse(message.data).job_name) {
-            //     mymsg = document.createElement('p');
-            //     for (let i = 0; i < this.userList.length; i++) {
-            //         if (this.userList[i].id == JSON.parse(message.data).u_id) {
-            //             mymsg.innerHTML = this.userList[i].name + ':    ' + JSON.parse(message.data).job_name;
-            //         }
-            //     }
-            //     // mymsg.innerHTML = JSON.parse(message.data).job_name;
-            //     var msgHistory = document.getElementById('history')
-            //     msgHistory.appendChild(mymsg);
-            //     mymsg.scrollIntoView();
-            // }
-            // }
         };
     }
 
