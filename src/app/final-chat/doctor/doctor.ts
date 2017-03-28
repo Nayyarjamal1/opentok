@@ -15,15 +15,15 @@ declare var ReconnectingWebSocket: any;
 })
 export class FinalDoctorComponent implements OnInit {
 
-    message: any;    
+    message: any;
     userList: any;
     socket: any;
     msg: any;
     receiverForm: FormGroup;
-   
+
     showfileSection: boolean = false;
-    
-    
+
+
     apiKey: any;
     sessionId: any;
     token: any;
@@ -44,9 +44,9 @@ export class FinalDoctorComponent implements OnInit {
     callType: any;
     connectionInfo: boolean = false;
     connectionID: any;
-    
+
     audioVideoChat = false;
-    chatDiv=true;
+    chatDiv = true;
 
     constructor(private base_path_service: GlobalService, private route: ActivatedRoute,
         private router: Router, private fb: FormBuilder) {
@@ -184,15 +184,17 @@ export class FinalDoctorComponent implements OnInit {
                 subscribeToVideo: false,
                 videoSource: null
             };
+            this.session.subscribe(this.stream, div.id);
+            this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
         } else if (this.callType == 'video') {
             subProp = {
                 resolution: '320x240',
                 frameRate: 15
             }
-        }
 
-        this.session.subscribe(this.stream, div.id);
-        this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
+            this.session.subscribe(this.stream, div.id);
+            this.subscriber = this.session.subscribe(this.stream, div.id, subProp);
+        }
     }
 
     acceptCall() {
@@ -214,10 +216,15 @@ export class FinalDoctorComponent implements OnInit {
         $('#endBtn').show();
         this.dialog = false;
         this.audioVideoChat = true;
-        this.chatDiv=false;
+        this.chatDiv = false;
         console.log(this.callType, "call type")
         if (!this.publisher) {
+            console.log('inside publisher')
             var pubOptions;
+            var div = document.createElement('div');
+            div.setAttribute('style', 'width: 264px; height: 186px; margin-top: 30px;');
+            div.setAttribute('id', 'myPublisher');
+            document.body.appendChild(div);
             if (this.callType == 'audio') {
                 pubOptions = {
                     width: 264,
@@ -226,6 +233,10 @@ export class FinalDoctorComponent implements OnInit {
                     publishAudio: true,
                     publishVideo: false
                 };
+
+                this.publisher = OT.initPublisher(this.apiKey, div.id, pubOptions); // Pass the replacement div id and properties
+                this.session.publish(this.publisher);
+
             } else if (this.callType == 'video') {
                 pubOptions = {
                     width: 264,
@@ -233,10 +244,10 @@ export class FinalDoctorComponent implements OnInit {
                     resolution: '320x240',
                     frameRate: 15
                 };
-            }
 
-            this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
-            this.session.publish(this.publisher);
+                this.publisher = OT.initPublisher(this.apiKey, div.id, pubOptions); // Pass the replacement div id and properties
+                this.session.publish(this.publisher);
+            }
         }
 
         this.session.on('streamCreated', (event) => {
@@ -269,13 +280,13 @@ export class FinalDoctorComponent implements OnInit {
         this.session.disconnect();
         if (this.publisher) {
             this.session.unpublish(this.publisher);
-            this.publisher = null;
         }
+        this.publisher = null;
 
         if (this.subscriber) {
             this.session.unsubscribe(this.subscriber);
-            this.subscriber = null;
         }
+        this.subscriber = null;
 
         $('#myPublisher').hide();
         // $('stream-' + this.stream.streamId).hide();
@@ -334,26 +345,52 @@ export class FinalDoctorComponent implements OnInit {
                 this.socket.onmessage = (message) => {
                     var mymsg;
                     console.log("message after 3: ", message.data)
-                    if (JSON.parse(message.data).is_file) {
-                        mymsg = document.createElement('img');
-                        mymsg.setAttribute('style', 'width: 210px; height: 180px');
-                        mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
-                        var msgHistory = document.getElementById('history')
-                        msgHistory.appendChild(mymsg);
-                        mymsg.scrollIntoView();
-                    } else {
-                        if (JSON.parse(message.data).job_name) {
-                            mymsg = document.createElement('p');
-                            for (let i = 0; i < this.userList.length; i++) {
-                                if (this.userList[i].id == JSON.parse(message.data).u_id) {
-                                    mymsg.innerHTML = this.userList[i].name + ':     ' + JSON.parse(message.data).job_name;
+                    // if (JSON.parse(message.data).is_file) {
+                    //     mymsg = document.createElement('img');
+                    //     mymsg.setAttribute('style', 'width: 210px; height: 180px');
+                    //     mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
+                    //     var msgHistory = document.getElementById('history')
+                    //     msgHistory.appendChild(mymsg);
+                    //     mymsg.scrollIntoView();
+                    // } else {
+                    var url = this.base_path_service.base_path + 'getHistory/?group=' + JSON.parse(this.msg.data).group_name + '&page=1';
+                    this.base_path_service.GetRequest(url)
+                        .subscribe(res => {
+                            console.log(res[0].json, "history");
+                            document.getElementById('history').innerHTML = '';
+                            for (let i = 0; i < res[0].json.data.length; i++) {
+                                for (let j = 0; j < this.userList.length; j++) {
+                                    if (this.userList[j].id == res[0].json.data[i].u_id) {
+                                        if (res[0].json.data[i].is_file) {
+                                            mymsg = document.createElement('img');
+                                            mymsg.setAttribute('style', 'width: 210px; height: 180px');
+                                            mymsg.setAttribute('src', this.base_path_service.base_path + res[0].json.data[i].file);
+                                            var msgHistory = document.getElementById('history')
+                                            msgHistory.appendChild(mymsg);
+                                            mymsg.scrollIntoView();
+                                        } else {
+                                            mymsg = document.createElement('p');
+                                            mymsg.innerHTML = this.userList[j].name + ':    ' + res[0].json.data[i].job_name;
+                                            var msgHistory = document.getElementById('history')
+                                            msgHistory.appendChild(mymsg);
+                                            mymsg.scrollIntoView();
+                                        }
+                                    }
                                 }
                             }
-                            var msgHistory = document.getElementById('history')
-                            msgHistory.appendChild(mymsg);
-                            mymsg.scrollIntoView();
-                        }
-                    };
+                        })
+                    // if (JSON.parse(message.data).job_name) {
+                    //     mymsg = document.createElement('p');
+                    //     for (let i = 0; i < this.userList.length; i++) {
+                    //         if (this.userList[i].id == JSON.parse(message.data).u_id) {
+                    //             mymsg.innerHTML = this.userList[i].name + ':     ' + JSON.parse(message.data).job_name;
+                    //         }
+                    //     }
+                    //     var msgHistory = document.getElementById('history')
+                    //     msgHistory.appendChild(mymsg);
+                    //     mymsg.scrollIntoView();
+                    // }
+                    //     };
                 }
             }
         };

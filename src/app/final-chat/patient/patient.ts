@@ -38,8 +38,8 @@ export class FinalPatientComponent implements OnInit {
     showfileSection: boolean = false;
     connectionInfo: boolean = false;
     connectionID: any;
-    chatDiv:boolean=false;
-    audioVideoChat:boolean=false;
+    chatDiv: boolean = false;
+    audioVideoChat: boolean = false;
 
     constructor(private base_path_service: GlobalService, private route: ActivatedRoute,
         private router: Router, private fb: FormBuilder) {
@@ -141,6 +141,10 @@ export class FinalPatientComponent implements OnInit {
                         publishAudio: true,
                         publishVideo: false
                     };
+
+                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
+                    this.session.publish(this.publisher);
+
                 } else if (type == 'video') {
                     pubOptions = {
                         width: 264,
@@ -148,10 +152,10 @@ export class FinalPatientComponent implements OnInit {
                         resolution: '320x240',
                         frameRate: 15
                     };
-                }
 
-                this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
-                this.session.publish(this.publisher);
+                    this.publisher = OT.initPublisher(this.apiKey, 'myPublisher', pubOptions); // Pass the replacement div id and properties
+                    this.session.publish(this.publisher);
+                }
 
             }
             for (let i = 0; i < event.streams.length; i++) {
@@ -221,16 +225,20 @@ export class FinalPatientComponent implements OnInit {
                 resolution: '320x240',
                 frameRate: 15
             }
+
+            this.session.subscribe(stream, div.id);
+            this.subscriber = this.session.subscribe(stream, div.id, subProp);
+
         } else if (type == 'audio') {
             subProp = {
                 subscribeToAudio: true,
                 subscribeToVideo: false,
                 videoSource: null
             };
-        }
 
-        this.session.subscribe(stream, div.id);
-        this.subscriber = this.session.subscribe(stream, div.id, subProp);
+            this.session.subscribe(stream, div.id);
+            this.subscriber = this.session.subscribe(stream, div.id, subProp);
+        }
     }
 
     end() {
@@ -387,27 +395,70 @@ export class FinalPatientComponent implements OnInit {
             this.msg = message;
             var mymsg;
             console.log("message after 2: ", message.data)
-            if (JSON.parse(message.data).is_file) {
-                mymsg = document.createElement('img');
-                mymsg.setAttribute('style', 'width: 200px; height: 180px');
-                mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
-                var msgHistory = document.getElementById('history')
-                msgHistory.appendChild(mymsg);
-                mymsg.scrollIntoView();
-            } else {
-                if (JSON.parse(message.data).job_name) {
-                    mymsg = document.createElement('p');
-                    for (let i = 0; i < this.userList.length; i++) {
-                        if (this.userList[i].id == JSON.parse(message.data).u_id) {
-                            mymsg.innerHTML = this.userList[i].name + ':    ' + JSON.parse(message.data).job_name;
+            var url = this.base_path_service.base_path + 'getHistory/?group=' + JSON.parse(this.msg.data).group_name + '&page=1';
+            this.base_path_service.GetRequest(url)
+                .subscribe(res => {
+                    console.log(res[0].json, "history");
+                    document.getElementById('history').innerHTML = '';
+                    for (let i = 0; i < res[0].json.data.length; i++) {
+                        for (let j = 0; j < this.userList.length; j++) {
+                            if (this.userList[j].id == res[0].json.data[i].u_id) {
+                                if (res[0].json.data[i].is_file) {
+                                    mymsg = document.createElement('img');
+                                    mymsg.setAttribute('style', 'width: 210px; height: 180px');
+                                    mymsg.setAttribute('src', this.base_path_service.base_path + res[0].json.data[i].file);
+                                    var msgHistory = document.getElementById('history')
+                                    msgHistory.appendChild(mymsg);
+                                    mymsg.scrollIntoView();
+                                } else {
+                                    mymsg = document.createElement('p');
+                                    mymsg.innerHTML = this.userList[j].name + ':    ' + res[0].json.data[i].job_name;
+                                    var msgHistory = document.getElementById('history')
+                                    msgHistory.appendChild(mymsg);
+                                    mymsg.scrollIntoView();
+                                }
+                            }
                         }
                     }
-                    // mymsg.innerHTML = JSON.parse(message.data).job_name;
-                    var msgHistory = document.getElementById('history')
-                    msgHistory.appendChild(mymsg);
-                    mymsg.scrollIntoView();
-                }
-            }
+                })
+            // if (JSON.parse(message.data).is_file) {
+            //     mymsg = document.createElement('img');
+            //     mymsg.setAttribute('style', 'width: 200px; height: 180px');
+            //     mymsg.setAttribute('src', this.base_path_service.base_path + JSON.parse(message.data).file);
+            //     var msgHistory = document.getElementById('history')
+            //     msgHistory.appendChild(mymsg);
+            //     mymsg.scrollIntoView();
+            // } else {
+            //     var url = this.base_path_service.base_path + 'getHistory/?group=' + JSON.parse(this.msg.data).group_name + '&page=1';
+            //     this.base_path_service.GetRequest(url)
+            //         .subscribe(res => {
+            //             console.log(res[0].json, "history");   
+            //             document.getElementById('history').innerHTML = '';                       
+            //             for (let i = 0; i < res[0].json.data.length; i++) {
+            //                 for (let j = 0; j < this.userList.length; j++) {
+            //                     if (this.userList[j].id == res[0].json.data[i].u_id) {
+            //                         mymsg = document.createElement('p');                                                                      
+            //                         mymsg.innerHTML = this.userList[j].name + ':    ' + res[0].json.data[i].job_name;
+            //                         var msgHistory = document.getElementById('history')
+            //                         msgHistory.appendChild(mymsg);
+            //                         mymsg.scrollIntoView();
+            //                     }
+            //                 }
+            //             }
+            //         })
+            // if (JSON.parse(message.data).job_name) {
+            //     mymsg = document.createElement('p');
+            //     for (let i = 0; i < this.userList.length; i++) {
+            //         if (this.userList[i].id == JSON.parse(message.data).u_id) {
+            //             mymsg.innerHTML = this.userList[i].name + ':    ' + JSON.parse(message.data).job_name;
+            //         }
+            //     }
+            //     // mymsg.innerHTML = JSON.parse(message.data).job_name;
+            //     var msgHistory = document.getElementById('history')
+            //     msgHistory.appendChild(mymsg);
+            //     mymsg.scrollIntoView();
+            // }
+            // }
         };
     }
 
