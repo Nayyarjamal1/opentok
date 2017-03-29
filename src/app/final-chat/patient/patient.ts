@@ -368,7 +368,7 @@ export class FinalPatientComponent implements OnInit {
                                         mymsg = document.createElement('embed');
                                     }
                                     mymsg.setAttribute('style', 'width: 210px; height: 180px');
-                                    mymsg.setAttribute('src', this.base_path_service.base_path + res[0].json.data[i].file);
+                                    mymsg.setAttribute('src', this.base_path_service.base_path_image + res[0].json.data[i].file);
                                     var msgHistory = document.getElementById('history')
                                     msgHistory.appendChild(name);
                                     msgHistory.appendChild(mymsg);
